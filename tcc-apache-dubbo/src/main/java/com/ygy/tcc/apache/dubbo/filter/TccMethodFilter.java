@@ -1,19 +1,19 @@
 package com.ygy.tcc.apache.dubbo.filter;
 
 
+import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.TccParticipant;
 import com.ygy.tcc.core.TccResource;
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.TccTransactionManager;
-import com.ygy.tcc.core.aop.annotation.TccMethod;
 import com.ygy.tcc.core.enums.TccParticipantStatus;
 import com.ygy.tcc.core.enums.TccResourceType;
 import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
+import com.ygy.tcc.core.util.ResourceUtil;
 import com.ygy.tcc.core.util.UuidGenerator;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.*;
@@ -33,7 +33,7 @@ public class TccMethodFilter implements Filter {
             if (tccMethod != null) {
                 TccTransaction transaction = TccHolder.getTransaction();
                 if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
-                    TccParticipant participant = addDubboParticipant(StringUtils.isEmpty(tccMethod.resourceId()) ? method.getName() : tccMethod.resourceId(), transaction, invocation);
+                    TccParticipant participant = addDubboParticipant(ResourceUtil.getResourceId(tccMethod, invoker.getInterface(), method), transaction, invocation);
                     try {
                         Result result = invoker.invoke(invocation);
                         participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
@@ -61,7 +61,7 @@ public class TccMethodFilter implements Filter {
             throw new TccException("resource is null");
         }
         tccParticipant.setResource(resource);
-        TccHolder.getHolderBean(TccTransactionManager.class).addParticipant(tccParticipant);
+        TccHolder.getHoldBean(TccTransactionManager.class).addParticipant(tccParticipant);
         return tccParticipant;
     }
 }

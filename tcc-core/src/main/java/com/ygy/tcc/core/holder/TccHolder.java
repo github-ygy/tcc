@@ -2,6 +2,7 @@ package com.ygy.tcc.core.holder;
 
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.ygy.tcc.core.TccResource;
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.enums.TccResourceType;
@@ -12,6 +13,8 @@ import org.apache.commons.collections4.MapUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public class TccHolder {
@@ -24,6 +27,8 @@ public class TccHolder {
     }
 
     private static final Map<Class, SingleSpringBeanHolder> BEAN_HOLDER_MAP = Maps.newConcurrentMap();
+
+    private static final Set<Class<?>> LOCAL_TCC_BEAN_CLASS_SET = Sets.newConcurrentHashSet();
 
     private static final Map<TccResourceType, Map<String, TccResource>> TCC_RESOURCE_MAP = Maps.newConcurrentMap();
 
@@ -59,10 +64,10 @@ public class TccHolder {
         CORE_DATA.get().remove(TCC_TRANSACTION_FIELD);
     }
 
-    public static <T> T getHolderBean(Class<T> beanClass) {
+    public static <T> T getHoldBean(Class<T> beanClass) {
         if (BEAN_HOLDER_MAP.containsKey(beanClass)) {
             SingleSpringBeanHolder<T> singleSpringBeanHolder = BEAN_HOLDER_MAP.get(beanClass);
-            return singleSpringBeanHolder.getHolderBean();
+            return singleSpringBeanHolder.getHoldBean();
         }
         T bean = context.getBean(beanClass);
         BEAN_HOLDER_MAP.putIfAbsent(beanClass, new SingleSpringBeanHolder<>(beanClass, bean));
@@ -73,19 +78,27 @@ public class TccHolder {
         context = springBeanContext;
     }
 
+    public static void holdLocalClass(Class<?> beanClass) {
+        LOCAL_TCC_BEAN_CLASS_SET.add(beanClass);
+    }
+
+    public static boolean checkIsLocalBean(Class<?> beanClass) {
+        return LOCAL_TCC_BEAN_CLASS_SET.contains(beanClass);
+    }
+
     public static class SingleSpringBeanHolder<T>{
 
-        private volatile T holderBean;
+        private volatile T holdBean;
 
         private Class<T> beanClass;
 
-        public SingleSpringBeanHolder(Class<T> beanClass, T holderBean) {
+        public SingleSpringBeanHolder(Class<T> beanClass, T holdBean) {
             this.beanClass = beanClass;
-            this.holderBean = holderBean;
+            this.holdBean = holdBean;
         }
 
-        public T getHolderBean() {
-            return holderBean;
+        public T getHoldBean() {
+            return holdBean;
         }
     }
 }

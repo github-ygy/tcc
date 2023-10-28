@@ -1,10 +1,12 @@
 package com.ygy.tcc.core.listener;
 
 
+import com.google.common.collect.Sets;
+import com.ygy.tcc.annotation.TccMethod;
+import com.ygy.tcc.core.aop.annotation.LocalTcc;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
 import com.ygy.tcc.core.TccResource;
-import com.ygy.tcc.core.aop.annotation.TccMethod;
 import com.ygy.tcc.core.enums.TccResourceType;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +18,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 
 public class LocalTccResourceFindListener implements ApplicationListener<ContextRefreshedEvent> {
@@ -52,7 +55,11 @@ public class LocalTccResourceFindListener implements ApplicationListener<Context
             return;
         }
         Class<?> beanClass = targetBean.getClass();
-
+        LocalTcc localTcc = beanClass.getAnnotation(LocalTcc.class);
+        if (localTcc == null) {
+            return;
+        }
+        TccHolder.holdLocalClass(beanClass);
         for (Method method : beanClass.getMethods()) {
             TccMethod annotation = method.getAnnotation(TccMethod.class);
             if (annotation == null) {
@@ -85,6 +92,21 @@ public class LocalTccResourceFindListener implements ApplicationListener<Context
             TccLogger.info("add local resource:" + resourceId);
             TccHolder.addTccResource(resource);
         }
+    }
+
+    private Set<Class<?>> getInterfaces(Class<?> beanClass) {
+        if (beanClass.isInterface()) {
+            return Sets.newHashSet(beanClass);
+        }
+        Set<Class<?>> findInterfaces = Sets.newHashSet();
+        while (beanClass != null) {
+            Class<?>[] interfaces = beanClass.getInterfaces();
+            for (Class<?> interfaceClass : interfaces) {
+                findInterfaces.addAll(getInterfaces(interfaceClass));
+            }
+            beanClass = beanClass.getSuperclass();
+        }
+        return findInterfaces;
     }
 
     public static Object getSpringTargetBean(Object proxy) throws Exception {

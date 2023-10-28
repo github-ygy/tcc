@@ -1,4 +1,4 @@
-package com.ygy.tcc.core.aop.annotation;
+package com.ygy.tcc.annotation;
 
 import java.lang.annotation.*;
 

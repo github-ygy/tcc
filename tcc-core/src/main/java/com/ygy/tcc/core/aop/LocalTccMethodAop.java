@@ -1,15 +1,16 @@
 package com.ygy.tcc.core.aop;
 
+import com.google.common.collect.Maps;
+import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.*;
-import com.ygy.tcc.core.aop.annotation.TccMethod;
 import com.ygy.tcc.core.enums.TccParticipantStatus;
 import com.ygy.tcc.core.enums.TccResourceType;
 import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
+import com.ygy.tcc.core.util.ResourceUtil;
 import com.ygy.tcc.core.util.UuidGenerator;
-import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,6 +20,7 @@ import org.springframework.core.Ordered;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -26,17 +28,20 @@ import java.util.Objects;
 public class LocalTccMethodAop implements Ordered {
 
 
-    @Pointcut("@annotation(com.ygy.tcc.core.aop.annotation.TccMethod)")
+    @Pointcut("@annotation(com.ygy.tcc.annotation.TccMethod)")
     private void pointcut() {
     }
 
     @Resource
     private TccTransactionManager tccTransactionManager;
 
+    private Map<Object, Boolean> LOCAL_BEAN_CACHE_MAP = Maps.newConcurrentMap();
+
+
     @Around("pointcut()")
     public Object around(ProceedingJoinPoint jp) throws Throwable {
         TccTransaction transaction = TccHolder.getTransaction();
-        if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
+        if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING) && TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
             TccParticipant participant = addLocalParticipant(jp, transaction);
             try {
                 Object result = jp.proceed();
@@ -68,7 +73,7 @@ public class LocalTccMethodAop implements Ordered {
     private TccResource parseAndGetResourceFromLocal(ProceedingJoinPoint jp) {
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
         TccMethod tccMethod = method.getAnnotation(TccMethod.class);
-        String resourceId = StringUtils.isEmpty(tccMethod.resourceId()) ? method.getName() : tccMethod.resourceId();
+        String resourceId = ResourceUtil.getResourceId(tccMethod, jp.getTarget().getClass(), method);
         return TccHolder.getTccResource(resourceId, TccResourceType.LOCAL);
     }
 

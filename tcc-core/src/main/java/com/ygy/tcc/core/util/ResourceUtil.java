@@ -1,6 +1,6 @@
 package com.ygy.tcc.core.util;
 
-import com.ygy.tcc.core.aop.annotation.TccMethod;
+import com.ygy.tcc.annotation.TccMethod;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;

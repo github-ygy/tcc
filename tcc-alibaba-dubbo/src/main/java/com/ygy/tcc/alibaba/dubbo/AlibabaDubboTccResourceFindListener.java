@@ -3,9 +3,9 @@ package com.ygy.tcc.alibaba.dubbo;
 
 import com.alibaba.dubbo.config.spring.ReferenceBean;
 import com.alibaba.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor;
+import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.TccResource;
-import com.ygy.tcc.core.aop.annotation.TccMethod;
 import com.ygy.tcc.core.enums.TccResourceType;
 import com.ygy.tcc.core.logger.TccLogger;
 import com.ygy.tcc.core.util.ResourceUtil;

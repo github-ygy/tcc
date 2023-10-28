@@ -31,6 +31,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.ygy.tcc</groupId>
+            <artifactId>tcc-annotation</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>

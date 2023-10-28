@@ -1,8 +1,8 @@
 package com.ygy.tcc.apache.dubbo;
 
 
+import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.TccResource;
-import com.ygy.tcc.core.aop.annotation.TccMethod;
 import com.ygy.tcc.core.enums.TccResourceType;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;

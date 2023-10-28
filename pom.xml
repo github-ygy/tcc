@@ -10,6 +10,7 @@
         <module>tcc-core</module>
         <module>tcc-alibaba-dubbo</module>
         <module>tcc-apache-dubbo</module>
+        <module>tcc-annotation</module>
     </modules>
 
 
@@ -48,6 +49,11 @@
             <dependency>
                 <groupId>com.ygy.tcc</groupId>
                 <artifactId>tcc-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ygy.tcc</groupId>
+                <artifactId>tcc-annotation</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
