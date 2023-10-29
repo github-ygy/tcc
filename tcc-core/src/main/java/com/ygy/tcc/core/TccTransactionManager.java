@@ -77,8 +77,8 @@ public class TccTransactionManager {
                 transaction.setStatus(TccStatus.ROLLBACK_SUCCESS);
             }else {
                 transaction.setStatus(TccStatus.ROLLBACK_FAIL);
-                tccTransactionRepository.update(transaction);
             }
+            tccTransactionRepository.update(transaction);
         } catch (Throwable throwable) {
             TccLogger.error("commit fail", throwable);
             throw new TccException("commit fail", throwable);

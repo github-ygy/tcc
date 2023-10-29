@@ -8,8 +8,8 @@ import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
 import com.ygy.tcc.core.TccResource;
 import com.ygy.tcc.core.enums.TccResourceType;
+import com.ygy.tcc.core.util.ResourceUtil;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopProxy;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationContext;
@@ -46,7 +46,6 @@ public class LocalTccResourceFindListener implements ApplicationListener<Context
     }
 
     private void addTccResourceFromLocalSpringBean(Object bean) {
-
         Object targetBean = null;
         try {
             targetBean = getSpringTargetBean(bean);
@@ -66,9 +65,8 @@ public class LocalTccResourceFindListener implements ApplicationListener<Context
                 continue;
             }
             Class<?>[] parameterTypes = method.getParameterTypes();
-            String resourceId = StringUtils.isEmpty(annotation.resourceId()) ? method.getName() : annotation.resourceId();
             TccResource resource = new TccResource();
-            resource.setResourceId(resourceId);
+            resource.setResourceId(ResourceUtil.getResourceId(annotation,beanClass,method));
             resource.setResourceType(TccResourceType.LOCAL);
             resource.setParameterTypes(parameterTypes);
             resource.setTargetClass(beanClass);
@@ -89,24 +87,9 @@ public class LocalTccResourceFindListener implements ApplicationListener<Context
                 TccLogger.error("not find rollbackMethod:" + annotation.rollBackMethod(), exception);
                 continue;
             }
-            TccLogger.info("add local resource:" + resourceId);
+            TccLogger.info("add local resource:" + resource.getResourceId());
             TccHolder.addTccResource(resource);
         }
-    }
-
-    private Set<Class<?>> getInterfaces(Class<?> beanClass) {
-        if (beanClass.isInterface()) {
-            return Sets.newHashSet(beanClass);
-        }
-        Set<Class<?>> findInterfaces = Sets.newHashSet();
-        while (beanClass != null) {
-            Class<?>[] interfaces = beanClass.getInterfaces();
-            for (Class<?> interfaceClass : interfaces) {
-                findInterfaces.addAll(getInterfaces(interfaceClass));
-            }
-            beanClass = beanClass.getSuperclass();
-        }
-        return findInterfaces;
     }
 
     public static Object getSpringTargetBean(Object proxy) throws Exception {
