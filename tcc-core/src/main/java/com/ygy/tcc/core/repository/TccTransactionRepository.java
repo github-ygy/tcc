@@ -1,7 +1,7 @@
 package com.ygy.tcc.core.repository;
 
 import com.google.common.collect.Lists;
-import com.ygy.tcc.core.TccParticipant;
+import com.ygy.tcc.core.participant.TccParticipant;
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.util.GsonUtil;
 import org.apache.commons.collections4.CollectionUtils;

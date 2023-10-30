@@ -8,5 +8,10 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD})
 public @interface TccTransactional {
 
+    boolean asyncCommit() default false;
+
+    boolean asyncRollback() default false;
+
+
 
 }

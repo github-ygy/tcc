@@ -3,6 +3,7 @@ package com.ygy.tcc.core;
 import com.google.common.collect.Lists;
 import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
+import com.ygy.tcc.core.participant.TccParticipant;
 import lombok.Data;
 
 import java.util.List;

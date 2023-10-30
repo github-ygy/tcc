@@ -1,12 +1,11 @@
 package com.ygy.tcc.core.listener;
 
 
-import com.google.common.collect.Sets;
 import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.aop.annotation.LocalTcc;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
-import com.ygy.tcc.core.TccResource;
+import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.enums.TccResourceType;
 import com.ygy.tcc.core.util.ResourceUtil;
 import org.apache.commons.lang3.ArrayUtils;
@@ -18,7 +17,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Set;
 
 
 public class LocalTccResourceFindListener implements ApplicationListener<ContextRefreshedEvent> {

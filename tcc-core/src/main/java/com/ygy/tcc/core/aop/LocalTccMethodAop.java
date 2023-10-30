@@ -1,6 +1,5 @@
 package com.ygy.tcc.core.aop;
 
-import com.google.common.collect.Maps;
 import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.*;
 import com.ygy.tcc.core.enums.TccParticipantStatus;
@@ -9,6 +8,7 @@ import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
+import com.ygy.tcc.core.participant.*;
 import com.ygy.tcc.core.util.ResourceUtil;
 import com.ygy.tcc.core.util.UuidGenerator;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -20,7 +20,6 @@ import org.springframework.core.Ordered;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.Objects;
 
 
@@ -35,21 +34,29 @@ public class LocalTccMethodAop implements Ordered {
     @Resource
     private TccTransactionManager tccTransactionManager;
 
-    private Map<Object, Boolean> LOCAL_BEAN_CACHE_MAP = Maps.newConcurrentMap();
-
 
     @Around("pointcut()")
     public Object around(ProceedingJoinPoint jp) throws Throwable {
         TccTransaction transaction = TccHolder.getTransaction();
         if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING) && TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
             TccParticipant participant = addLocalParticipant(jp, transaction);
+            TccParticipantContext suspendParticipantContext = TccHolder.getParticipantContext();
             try {
+                TccHolder.bindParticipantContext(new TccParticipantContext(participant.getTccId(), participant.getParticipantId(), participant.getStatus(), participant.getResource().getResourceId(), participant.getResource().getResourceType()));
                 Object result = jp.proceed();
                 participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
                 return result;
             } catch (Throwable e) {
                 participant.setStatus(TccParticipantStatus.TRY_FAIL);
                 throw e;
+            }finally {
+                TccParticipantContext bindContext = TccHolder.getParticipantContext();
+                if (bindContext != null && Objects.equals(bindContext.getParticipantId(), participant.getParticipantId())) {
+                    TccHolder.clearParticipantContext();
+                }
+                if (suspendParticipantContext != null) {
+                    TccHolder.bindParticipantContext(suspendParticipantContext);
+                }
             }
         }
         return jp.proceed();
@@ -66,7 +73,10 @@ public class LocalTccMethodAop implements Ordered {
             throw new TccException("resource is null");
         }
         tccParticipant.setResource(resource);
-        tccTransactionManager.addParticipant(tccParticipant);
+        boolean addResult = tccTransactionManager.addParticipant(transaction, tccParticipant);
+        if (!addResult) {
+            throw new TccException("add participant error");
+        }
         return tccParticipant;
     }
 

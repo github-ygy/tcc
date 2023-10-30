@@ -1,5 +1,7 @@
 package com.ygy.tcc.core.aop;
 
+import com.ygy.tcc.annotation.TccMethod;
+import com.ygy.tcc.core.aop.annotation.TccTransactional;
 import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.TccTransaction;
@@ -8,9 +10,11 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.Ordered;
 
 import javax.annotation.Resource;
+import java.lang.reflect.Method;
 
 
 @Aspect
@@ -30,6 +34,8 @@ public class TccTransactionalAop implements Ordered {
         if (transaction != null) {
             return jp.proceed();
         }
+        Method method = ((MethodSignature) jp.getSignature()).getMethod();
+        TccTransactional tccTransactional = method.getAnnotation(TccTransactional.class);
         transaction = new TccTransaction(TransactionRole.Initiator);
         try {
             tccTransactionManager.begin(transaction);
@@ -37,10 +43,10 @@ public class TccTransactionalAop implements Ordered {
             try {
                 result = jp.proceed();
             } catch (Throwable throwable) {
-                tccTransactionManager.rollBack();
+                tccTransactionManager.rollBack(tccTransactional.asyncRollback());
                 throw throwable;
             }
-            tccTransactionManager.commit();
+            tccTransactionManager.commit(tccTransactional.asyncCommit());
             return result;
         } finally {
             tccTransactionManager.completion();

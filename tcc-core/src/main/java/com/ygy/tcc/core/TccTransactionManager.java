@@ -7,12 +7,20 @@ import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
+import com.ygy.tcc.core.participant.TccParticipant;
+import com.ygy.tcc.core.participant.TccParticipantHookManager;
+import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.repository.TccTransactionRepository;
 import com.ygy.tcc.core.util.UuidGenerator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 public class TccTransactionManager {
@@ -20,12 +28,15 @@ public class TccTransactionManager {
     @Resource
     private TccTransactionRepository tccTransactionRepository;
 
+    private int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2 + 1;
+
+    private int threadQueueSize = 1024;
+
+    private ThreadPoolExecutor asyncPoolExecutor = new ThreadPoolExecutor(1, threadPoolSize, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(threadQueueSize), new ThreadPoolExecutor.CallerRunsPolicy());
+
 
     public void begin(TccTransaction transaction) {
         if (transaction.getRole() != TransactionRole.Initiator) {
-            if (StringUtils.isEmpty(transaction.getTccId())) {
-                throw new TccException("tccId is empty");
-            }
             return;
         }
         if (StringUtils.isNotEmpty(transaction.getTccId())) {
@@ -42,7 +53,7 @@ public class TccTransactionManager {
         TccHolder.bindTransaction(transaction);
     }
 
-    public void rollBack() {
+    public void rollBack(boolean async) {
         TccTransaction transaction = TccHolder.getTransaction();
         if (transaction == null) {
             throw new TccException("no transaction");
@@ -52,7 +63,19 @@ public class TccTransactionManager {
         }
         transaction.setStatus(TccStatus.ROLLBACK);
         tccTransactionRepository.update(transaction);
-        rollbackTransaction(transaction);
+        if (async) {
+            asyncPoolExecutor.submit(() -> {
+                try {
+                    TccHolder.bindTransaction(transaction);
+                    rollbackTransaction(transaction);
+                }finally {
+                    TccHolder.clearTccTransaction();
+                }
+            });
+        }else {
+            rollbackTransaction(transaction);
+        }
+
     }
 
     private void rollbackTransaction(TccTransaction transaction) {
@@ -85,7 +108,7 @@ public class TccTransactionManager {
         }
     }
 
-    public void commit() {
+    public void commit(boolean async) {
         TccTransaction transaction = TccHolder.getTransaction();
         if (transaction == null) {
             throw new TccException("no transaction");
@@ -95,7 +118,19 @@ public class TccTransactionManager {
         }
         transaction.setStatus(TccStatus.CONFIRM);
         tccTransactionRepository.update(transaction);
-        commitTransaction(transaction);
+        if (async) {
+            asyncPoolExecutor.submit(() -> {
+                try {
+                    TccHolder.bindTransaction(transaction);
+                    commitTransaction(transaction);
+                }finally {
+                    TccHolder.clearTccTransaction();
+                }
+            });
+        }else {
+            commitTransaction(transaction);
+        }
+
     }
 
     private void commitTransaction(TccTransaction transaction) {
@@ -131,17 +166,34 @@ public class TccTransactionManager {
 
     public void completion() {
         TccTransaction transaction = TccHolder.getTransaction();
-        if (transaction != null && transaction.getRole() == TransactionRole.Initiator) {
+        if (transaction != null) {
             TccHolder.clearTccTransaction();
         }
     }
 
-    public void addParticipant(TccParticipant tccParticipant) {
-        TccTransaction transaction = TccHolder.getTransaction();
+    public boolean addParticipant(TccTransaction transaction, TccParticipant tccParticipant) {
         if (transaction.getRole() != TransactionRole.Initiator) {
-            return;
+            return false;
+        }
+        if (transaction.getStatus() != TccStatus.TRYING) {
+            return false;
+        }
+        List<TccParticipant> participants = transaction.getParticipants();
+        if (CollectionUtils.isNotEmpty(participants)) {
+            for (TccParticipant participant : participants) {
+                TccResource resource = participant.getResource();
+                if (Objects.equals(resource.getResourceId(), tccParticipant.getResource().getResourceId()) && Objects.equals(resource.getResourceType(), tccParticipant.getResource().getResourceType())) {
+                    return false;
+                }
+            }
         }
         transaction.getParticipants().add(tccParticipant);
         tccTransactionRepository.update(transaction);
+        return true;
     }
+
+    public ThreadPoolExecutor getAsyncPoolExecutor() {
+        return asyncPoolExecutor;
+    }
+
 }

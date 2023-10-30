@@ -2,8 +2,10 @@ package com.ygy.tcc.apache.dubbo.filter;
 
 
 import com.ygy.tcc.annotation.TccMethod;
-import com.ygy.tcc.core.TccParticipant;
-import com.ygy.tcc.core.TccResource;
+import com.ygy.tcc.apache.dubbo.constants.TccDubboConstants;
+import com.ygy.tcc.core.participant.TccParticipant;
+import com.ygy.tcc.core.participant.TccParticipantContext;
+import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.TccTransactionManager;
 import com.ygy.tcc.core.enums.TccParticipantStatus;
@@ -12,6 +14,7 @@ import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
+import com.ygy.tcc.core.util.GsonUtil;
 import com.ygy.tcc.core.util.ResourceUtil;
 import com.ygy.tcc.core.util.UuidGenerator;
 import org.apache.dubbo.common.constants.CommonConstants;
@@ -35,6 +38,7 @@ public class TccMethodFilter implements Filter {
                 if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
                     TccParticipant participant = addDubboParticipant(ResourceUtil.getResourceId(tccMethod, invoker.getInterface(), method), transaction, invocation);
                     try {
+                        setTccParticipantContextToDubbo(participant);
                         Result result = invoker.invoke(invocation);
                         participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
                         return result;
@@ -50,6 +54,10 @@ public class TccMethodFilter implements Filter {
         }
     }
 
+    private void setTccParticipantContextToDubbo(TccParticipant participant) {
+        RpcContext.getClientAttachment().setAttachment(TccDubboConstants.TCC_PARTICIPANT_CONTEXT_KEY, GsonUtil.toJson(new TccParticipantContext(participant.getTccId(), participant.getParticipantId(), participant.getStatus(), participant.getResource().getResourceId(), participant.getResource().getResourceType())));
+    }
+
     private TccParticipant addDubboParticipant(String resourceId, TccTransaction transaction, Invocation invocation) {
         TccParticipant tccParticipant = new TccParticipant();
         tccParticipant.setTccId(transaction.getTccId());
@@ -61,7 +69,10 @@ public class TccMethodFilter implements Filter {
             throw new TccException("resource is null");
         }
         tccParticipant.setResource(resource);
-        TccHolder.getHoldBean(TccTransactionManager.class).addParticipant(tccParticipant);
+        boolean addResult = TccHolder.getHoldBean(TccTransactionManager.class).addParticipant(transaction, tccParticipant);
+        if (!addResult) {
+            throw new TccException("add participant error");
+        }
         return tccParticipant;
     }
 }

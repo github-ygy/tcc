@@ -1,4 +1,4 @@
-package com.ygy.tcc.core;
+package com.ygy.tcc.core.participant;
 
 import com.ygy.tcc.core.enums.TccResourceType;
 import lombok.Data;
