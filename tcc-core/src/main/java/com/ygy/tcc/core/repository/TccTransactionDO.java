@@ -8,10 +8,16 @@ import java.io.Serializable;
 @Data
 public class TccTransactionDO implements Serializable {
 
+    private String parentTccAppId;
+    private String parentTccId;
+    private String parentParticipantId;
+    private String tccAppId;
     private String tccId;
     private String tccStatus;
     private Integer version;
     private Long createTime;
     private Long updateTime;
     private String participantsJson;
+
+
 }

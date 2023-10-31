@@ -12,6 +12,14 @@ import java.util.List;
 @Data
 public class TccTransaction {
 
+    private String parentTccId;
+
+    private String parentParticipantId;
+
+    private String parentTccAppId;
+
+    private String tccAppId;
+
     private String tccId;
 
     private TccStatus status;
@@ -31,10 +39,5 @@ public class TccTransaction {
         this.role = role;
     }
 
-    public TccTransaction(String tccId, TccStatus status, TransactionRole role) {
-        this.tccId = tccId;
-        this.status = status;
-        this.role = role;
-    }
 
 }

@@ -6,7 +6,7 @@ import com.alibaba.dubbo.rpc.*;
 import com.ygy.tcc.alibaba.dubbo.constants.TccDubboConstants;
 import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.participant.TccParticipant;
-import com.ygy.tcc.core.participant.TccParticipantContext;
+import com.ygy.tcc.core.participant.TccPropagationContext;
 import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.TccTransactionManager;
@@ -18,7 +18,6 @@ import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.util.GsonUtil;
 import com.ygy.tcc.core.util.ResourceUtil;
-import com.ygy.tcc.core.util.UuidGenerator;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -28,16 +27,23 @@ public class TccMethodFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-
+        TccTransaction transaction = TccHolder.getTransaction();
+        if (transaction == null) {
+            return invoker.invoke(invocation);
+        }
+        Method method = null;
         try {
-            Method method = invoker.getInterface().getMethod(invocation.getMethodName(), invocation.getParameterTypes());
+            method = invoker.getInterface().getMethod(invocation.getMethodName(), invocation.getParameterTypes());
+        } catch (Exception exception) {
+            throw new RpcException(exception);
+        }
+        try {
             TccMethod tccMethod = method.getAnnotation(TccMethod.class);
             if (tccMethod != null) {
-                TccTransaction transaction = TccHolder.getTransaction();
-                if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
+                if (Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
                     TccParticipant participant = addDubboParticipant(ResourceUtil.getResourceId(tccMethod, invoker.getInterface(), method), transaction, invocation);
                     try {
-                        setTccParticipantContextToDubbo(participant);
+                        RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participant.getParticipantId())));
                         Result result = invoker.invoke(invocation);
                         participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
                         return result;
@@ -47,20 +53,22 @@ public class TccMethodFilter implements Filter {
                     }
                 }
             }
+            TccPropagationContext propagationContext = TccHolder.getPropagationContext();
+            if (propagationContext != null) {
+                RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(propagationContext));
+            }else {
+                RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), null)));
+            }
             return invoker.invoke(invocation);
         } catch (Exception ex) {
             throw new RpcException(ex);
         }
     }
 
-    private void setTccParticipantContextToDubbo(TccParticipant participant) {
-        RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PARTICIPANT_CONTEXT_KEY, GsonUtil.toJson(new TccParticipantContext(participant.getTccId(), participant.getParticipantId(), participant.getStatus(), participant.getResource().getResourceId(), participant.getResource().getResourceType())));
-    }
-
     private TccParticipant addDubboParticipant(String resourceId, TccTransaction transaction, Invocation invocation) {
         TccParticipant tccParticipant = new TccParticipant();
         tccParticipant.setTccId(transaction.getTccId());
-        tccParticipant.setParticipantId(UuidGenerator.generateParticipantId());
+        tccParticipant.setParticipantId(TccHolder.getHoldBean(TccTransactionManager.class).generateParticipantId());
         tccParticipant.setStatus(TccParticipantStatus.TRYING);
         tccParticipant.setArgs(invocation.getArguments());
         TccResource resource = TccHolder.getTccResource(resourceId, TccResourceType.DUBBO_REFERENCE);

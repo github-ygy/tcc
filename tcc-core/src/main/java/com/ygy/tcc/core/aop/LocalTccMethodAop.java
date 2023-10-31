@@ -10,7 +10,6 @@ import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.participant.*;
 import com.ygy.tcc.core.util.ResourceUtil;
-import com.ygy.tcc.core.util.UuidGenerator;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -40,23 +39,13 @@ public class LocalTccMethodAop implements Ordered {
         TccTransaction transaction = TccHolder.getTransaction();
         if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING) && TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
             TccParticipant participant = addLocalParticipant(jp, transaction);
-            TccParticipantContext suspendParticipantContext = TccHolder.getParticipantContext();
             try {
-                TccHolder.bindParticipantContext(new TccParticipantContext(participant.getTccId(), participant.getParticipantId(), participant.getStatus(), participant.getResource().getResourceId(), participant.getResource().getResourceType()));
                 Object result = jp.proceed();
                 participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
                 return result;
             } catch (Throwable e) {
                 participant.setStatus(TccParticipantStatus.TRY_FAIL);
                 throw e;
-            }finally {
-                TccParticipantContext bindContext = TccHolder.getParticipantContext();
-                if (bindContext != null && Objects.equals(bindContext.getParticipantId(), participant.getParticipantId())) {
-                    TccHolder.clearParticipantContext();
-                }
-                if (suspendParticipantContext != null) {
-                    TccHolder.bindParticipantContext(suspendParticipantContext);
-                }
             }
         }
         return jp.proceed();
@@ -65,7 +54,7 @@ public class LocalTccMethodAop implements Ordered {
     private TccParticipant addLocalParticipant(ProceedingJoinPoint jp, TccTransaction transaction) {
         TccParticipant tccParticipant = new TccParticipant();
         tccParticipant.setTccId(transaction.getTccId());
-        tccParticipant.setParticipantId(UuidGenerator.generateParticipantId());
+        tccParticipant.setParticipantId(tccTransactionManager.generateParticipantId());
         tccParticipant.setStatus(TccParticipantStatus.TRYING);
         tccParticipant.setArgs(jp.getArgs());
         TccResource resource = parseAndGetResourceFromLocal(jp);

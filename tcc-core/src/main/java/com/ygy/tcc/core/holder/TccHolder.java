@@ -3,8 +3,7 @@ package com.ygy.tcc.core.holder;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.ygy.tcc.core.participant.TccParticipantContext;
-import com.ygy.tcc.core.participant.TccParticipantHook;
+import com.ygy.tcc.core.participant.TccPropagationContext;
 import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.enums.TccResourceType;
@@ -19,7 +18,7 @@ import java.util.Set;
 public class TccHolder {
 
     public static final String TCC_TRANSACTION_FIELD = "tcc_transaction_field";
-    public static final String TCC_PARTICIPANT_CONTEXT_FIELD = "tcc_participant_context_field";
+    public static final String TCC_PROPAGATION_CONTEXT_FIELD = "tcc_propagation_context_field";
 
     private static SpringBeanContext context = null;
 
@@ -86,20 +85,20 @@ public class TccHolder {
         return LOCAL_TCC_BEAN_CLASS_SET.contains(beanClass);
     }
 
-    public static void bindParticipantContext(TccParticipantContext tccParticipantContext) {
-        CORE_DATA.get().put(TCC_PARTICIPANT_CONTEXT_FIELD, tccParticipantContext);
+    public static void bindPropagationContext(TccPropagationContext tccParticipantContext) {
+        CORE_DATA.get().put(TCC_PROPAGATION_CONTEXT_FIELD, tccParticipantContext);
     }
 
-    public static void clearParticipantContext() {
-        CORE_DATA.get().remove(TCC_PARTICIPANT_CONTEXT_FIELD);
+    public static void clearPropagationContext() {
+        CORE_DATA.get().remove(TCC_PROPAGATION_CONTEXT_FIELD);
     }
 
-    public static TccParticipantContext getParticipantContext() {
-        Object obj = CORE_DATA.get().get(TCC_PARTICIPANT_CONTEXT_FIELD);
+    public static TccPropagationContext getPropagationContext() {
+        Object obj = CORE_DATA.get().get(TCC_PROPAGATION_CONTEXT_FIELD);
         if (obj == null) {
             return null;
         }
-        return (TccParticipantContext) obj;
+        return (TccPropagationContext) obj;
     }
 
     public static class SingleSpringBeanHolder<T>{

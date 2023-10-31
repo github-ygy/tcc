@@ -12,8 +12,11 @@ import java.util.List;
 
 public class TccTransactionRepository {
 
-    @Resource
     private TccTransactionMapper tccTransactionMapper;
+
+    public TccTransactionRepository(TccTransactionMapper tccTransactionMapper) {
+        this.tccTransactionMapper = tccTransactionMapper;
+    }
 
 
     public void create(TccTransaction transaction) {
@@ -26,8 +29,12 @@ public class TccTransactionRepository {
 
     private TccTransactionDO toTccTransactionDO(TccTransaction transaction) {
         TccTransactionDO transactionDO = new TccTransactionDO();
+        transactionDO.setParentTccAppId(transaction.getParentTccAppId());
+        transactionDO.setParentTccId(transaction.getParentTccId());
+        transactionDO.setParentParticipantId(transaction.getParentParticipantId());
         transactionDO.setTccId(transaction.getTccId());
         transactionDO.setTccStatus(transaction.getStatus().name());
+        transactionDO.setTccAppId(transaction.getTccAppId());
         transactionDO.setVersion(transaction.getVersion());
         transactionDO.setCreateTime(transaction.getCreateTime());
         transactionDO.setUpdateTime(transaction.getUpdateTime());

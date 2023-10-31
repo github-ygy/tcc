@@ -1,6 +1,7 @@
 package com.ygy.tcc.core;
 
 
+import com.ygy.tcc.core.configration.TccConfigProps;
 import com.ygy.tcc.core.enums.TccParticipantStatus;
 import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
@@ -8,10 +9,9 @@ import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
 import com.ygy.tcc.core.participant.TccParticipant;
-import com.ygy.tcc.core.participant.TccParticipantHookManager;
 import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.repository.TccTransactionRepository;
-import com.ygy.tcc.core.util.UuidGenerator;
+import com.ygy.tcc.core.generator.UuidGenerator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -25,8 +25,18 @@ import java.util.concurrent.TimeUnit;
 
 public class TccTransactionManager {
 
+    private TccConfigProps tccConfigProps;
+
+    private UuidGenerator idGenerator;
+
+    public TccTransactionManager(TccConfigProps tccConfigProps, UuidGenerator idGenerator) {
+        this.tccConfigProps = tccConfigProps;
+        this.idGenerator = idGenerator;
+    }
+
     @Resource
     private TccTransactionRepository tccTransactionRepository;
+
 
     private int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2 + 1;
 
@@ -46,9 +56,10 @@ public class TccTransactionManager {
         if (current != null) {
             throw new TccException("current tccTransaction must empty");
         }
-        String tccId = UuidGenerator.generateTccId();
+        String tccId = generateTccId();
         transaction.setTccId(tccId);
         transaction.setStatus(TccStatus.TRYING);
+        transaction.setTccAppId(tccConfigProps.getTccAppId());
         tccTransactionRepository.create(transaction);
         TccHolder.bindTransaction(transaction);
     }
@@ -196,4 +207,11 @@ public class TccTransactionManager {
         return asyncPoolExecutor;
     }
 
+    public String generateParticipantId() {
+        return idGenerator.generateParticipantId();
+    }
+
+    private String generateTccId() {
+        return idGenerator.generateTccId();
+    }
 }

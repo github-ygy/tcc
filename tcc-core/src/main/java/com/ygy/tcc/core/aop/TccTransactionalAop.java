@@ -6,6 +6,7 @@ import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.TccTransactionManager;
+import com.ygy.tcc.core.participant.TccPropagationContext;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -37,6 +38,13 @@ public class TccTransactionalAop implements Ordered {
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
         TccTransactional tccTransactional = method.getAnnotation(TccTransactional.class);
         transaction = new TccTransaction(TransactionRole.Initiator);
+        TccPropagationContext propagationContext = TccHolder.getPropagationContext();
+        if (propagationContext != null) {
+            transaction.setParentTccId(propagationContext.getTccId());
+            transaction.setParentParticipantId(propagationContext.getParticipantId());
+            transaction.setParentTccAppId(propagationContext.getTccAppId());
+            TccHolder.clearPropagationContext();
+        }
         try {
             tccTransactionManager.begin(transaction);
             Object result;

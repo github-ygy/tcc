@@ -12,9 +12,7 @@ public class TccParticipantHookManager {
 
     private static final List<TccParticipantHook> BASE_HOOKS = Lists.newArrayList();
 
-
     private static final ReentrantReadWriteLock HOOK_READ_WRITE_LOCK = new ReentrantReadWriteLock();
-
 
 
     private TccParticipantHookManager() {

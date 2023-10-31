@@ -1,1 +1,2 @@
 tccMethodFilter=com.ygy.tcc.apache.dubbo.filter.TccMethodFilter
+tccPropagationContextFilter=com.ygy.tcc.apache.dubbo.filter.TccPropagationContextFilter
