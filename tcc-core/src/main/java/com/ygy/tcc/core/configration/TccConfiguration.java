@@ -10,6 +10,7 @@ import com.ygy.tcc.core.repository.TccTransactionRepository;
 import com.ygy.tcc.core.spring.SpringBeanContext;
 import com.ygy.tcc.core.generator.UuidGenerator;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -27,6 +28,7 @@ public class TccConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(UuidGenerator.class)
     public UuidGenerator uuidGenerator() {
         return new DefaultUuidGenerator();
     }

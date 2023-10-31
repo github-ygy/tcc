@@ -21,7 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spring.version>5.2.12.RELEASE</spring.version>
-        <spring.boot.starter.version>3.0.4</spring.boot.starter.version>
+        <spring.boot.starter.version>2.5.13</spring.boot.starter.version>
         <dubbo.starter.version>0.2.1.RELEASE</dubbo.starter.version>
         <alibaba.dubbo.version>2.6.10</alibaba.dubbo.version>
         <apache.dubbo.version>3.2.0-beta.4</apache.dubbo.version>
@@ -92,9 +92,18 @@
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-autoconfigure</artifactId>
+                <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring.boot.starter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-framework-bom</artifactId>
+                    </exclusion>
+                </exclusions>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
+
 
             <dependency>
                 <groupId>org.aspectj</groupId>
