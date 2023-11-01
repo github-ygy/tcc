@@ -8,7 +8,7 @@ import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.enums.TccResourceType;
 import com.ygy.tcc.core.logger.TccLogger;
-import com.ygy.tcc.core.util.ResourceUtil;
+import com.ygy.tcc.core.util.TccUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.context.ApplicationContext;
@@ -73,7 +73,7 @@ public class AlibabaDubboTccResourceFindListener implements ApplicationListener<
             }
             Class<?>[] parameterTypes = method.getParameterTypes();
             TccResource resource = new TccResource();
-            resource.setResourceId(ResourceUtil.getResourceId(annotation,interfaceClass,method));
+            resource.setResourceId(TccUtil.getResourceId(annotation,interfaceClass,method));
             resource.setResourceType(TccResourceType.DUBBO_REFERENCE);
             resource.setParameterTypes(parameterTypes);
             resource.setTargetClass(interfaceClass);

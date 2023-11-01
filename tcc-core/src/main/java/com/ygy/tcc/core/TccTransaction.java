@@ -34,10 +34,10 @@ public class TccTransaction {
 
     private long updateTime;
 
+    private int recoveryTimes;
+
 
     public TccTransaction(TransactionRole role) {
         this.role = role;
     }
-
-
 }

@@ -89,7 +89,7 @@ public class TccTransactionManager {
 
     }
 
-    private void rollbackTransaction(TccTransaction transaction) {
+    public void rollbackTransaction(TccTransaction transaction) {
         try {
             boolean isAllRollback = true;
             if (CollectionUtils.isNotEmpty(transaction.getParticipants())) {
@@ -144,7 +144,7 @@ public class TccTransactionManager {
 
     }
 
-    private void commitTransaction(TccTransaction transaction) {
+    public void commitTransaction(TccTransaction transaction) {
         try {
             boolean isAllConfirm = true;
             if (CollectionUtils.isNotEmpty(transaction.getParticipants())) {
@@ -178,6 +178,9 @@ public class TccTransactionManager {
     public void completion() {
         TccTransaction transaction = TccHolder.getTransaction();
         if (transaction != null) {
+            if (transaction.getRole() != TransactionRole.Initiator) {
+                return;
+            }
             TccHolder.clearTccTransaction();
         }
     }

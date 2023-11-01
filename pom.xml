@@ -11,6 +11,7 @@
         <module>tcc-alibaba-dubbo</module>
         <module>tcc-apache-dubbo</module>
         <module>tcc-annotation</module>
+        <module>tcc-recovery</module>
     </modules>
 
 

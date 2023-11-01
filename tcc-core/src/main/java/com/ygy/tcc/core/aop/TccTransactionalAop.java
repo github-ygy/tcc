@@ -2,6 +2,7 @@ package com.ygy.tcc.core.aop;
 
 import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.aop.annotation.TccTransactional;
+import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.TccTransaction;
@@ -16,6 +17,7 @@ import org.springframework.core.Ordered;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 
 @Aspect
@@ -44,6 +46,10 @@ public class TccTransactionalAop implements Ordered {
             transaction.setParentParticipantId(propagationContext.getParticipantId());
             transaction.setParentTccAppId(propagationContext.getTccAppId());
             TccHolder.clearPropagationContext();
+            //only try can start new transaction
+            if (!Objects.equals(propagationContext.getTccStatus(), TccStatus.TRYING)) {
+                return jp.proceed();
+            }
         }
         try {
             tccTransactionManager.begin(transaction);

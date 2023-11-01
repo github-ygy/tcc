@@ -9,7 +9,7 @@ import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.participant.*;
-import com.ygy.tcc.core.util.ResourceUtil;
+import com.ygy.tcc.core.util.TccUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -72,7 +72,7 @@ public class LocalTccMethodAop implements Ordered {
     private TccResource parseAndGetResourceFromLocal(ProceedingJoinPoint jp) {
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
         TccMethod tccMethod = method.getAnnotation(TccMethod.class);
-        String resourceId = ResourceUtil.getResourceId(tccMethod, jp.getTarget().getClass(), method);
+        String resourceId = TccUtil.getResourceId(tccMethod, jp.getTarget().getClass(), method);
         return TccHolder.getTccResource(resourceId, TccResourceType.LOCAL);
     }
 
