@@ -74,7 +74,7 @@ public class TccUtil {
         if (StringUtils.isEmpty(tccTransactionDO.getParticipantsJson())) {
             return transaction;
         }
-        List<TccParticipantDO> participantDos = GsonUtil.parseList(tccTransactionDO.getParticipantsJson(),TccParticipantDO.class );
+        List<TccParticipantDO> participantDos = GsonUtil.parseList(tccTransactionDO.getParticipantsJson(), TccParticipantDO.class);
         if (CollectionUtils.isNotEmpty(participantDos)) {
             List<TccParticipant> participants = Lists.newArrayList();
             for (TccParticipantDO participantDO : participantDos) {

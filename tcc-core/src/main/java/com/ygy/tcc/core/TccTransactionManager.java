@@ -2,6 +2,7 @@ package com.ygy.tcc.core;
 
 
 import com.ygy.tcc.core.configration.TccConfigProps;
+import com.ygy.tcc.core.configration.TccProperties;
 import com.ygy.tcc.core.enums.TccParticipantStatus;
 import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;
@@ -25,12 +26,10 @@ import java.util.concurrent.TimeUnit;
 
 public class TccTransactionManager {
 
-    private TccConfigProps tccConfigProps;
 
     private UuidGenerator idGenerator;
 
-    public TccTransactionManager(TccConfigProps tccConfigProps, UuidGenerator idGenerator) {
-        this.tccConfigProps = tccConfigProps;
+    public TccTransactionManager(UuidGenerator idGenerator) {
         this.idGenerator = idGenerator;
     }
 
@@ -59,7 +58,7 @@ public class TccTransactionManager {
         String tccId = generateTccId();
         transaction.setTccId(tccId);
         transaction.setStatus(TccStatus.TRYING);
-        transaction.setTccAppId(tccConfigProps.getTccAppId());
+        transaction.setTccAppId(TccProperties.getTccAppId());
         tccTransactionRepository.create(transaction);
         TccHolder.bindTransaction(transaction);
     }
@@ -96,7 +95,7 @@ public class TccTransactionManager {
                 for (TccParticipant participant : transaction.getParticipants()) {
                     if (!participant.getStatus().equals(TccParticipantStatus.ROLLBACK_SUCCESS)) {
                         try {
-                            participant.rollback();
+                            participant.rollback(transaction);
                             participant.setStatus(TccParticipantStatus.ROLLBACK_SUCCESS);
                         } catch (TccException exception) {
                             TccLogger.error("rollback fail", exception);
@@ -151,7 +150,7 @@ public class TccTransactionManager {
                 for (TccParticipant participant : transaction.getParticipants()) {
                     if (!participant.getStatus().equals(TccParticipantStatus.CONFIRM_SUCCESS)) {
                         try {
-                            participant.commit();
+                            participant.commit(transaction);
                             participant.setStatus(TccParticipantStatus.CONFIRM_SUCCESS);
                         } catch (TccException tccException) {
                             TccLogger.error("commit fail", tccException);

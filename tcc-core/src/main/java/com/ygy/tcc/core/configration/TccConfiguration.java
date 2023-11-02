@@ -36,9 +36,8 @@ public class TccConfiguration {
     @Bean
     @DependsOn({"tccTransactionRepository"})
     public TccTransactionManager tccTransactionManager(UuidGenerator uuidGenerator) {
-        TccConfigProps tccConfigProps = new TccConfigProps();
-        tccConfigProps.setTccAppId(tccAppId);
-        return new TccTransactionManager(tccConfigProps, uuidGenerator);
+        TccProperties.setProp(TccProperties.TCC_APP_ID_FIELD, tccAppId);
+        return new TccTransactionManager(uuidGenerator);
     }
 
     @Bean

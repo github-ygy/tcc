@@ -26,19 +26,16 @@ public class TccParticipant {
 
     private int retryTimes;
 
-    public void commit() {
-        invoke(resource.getConfirmMethod(), resource.getTargetBean(), args, " commit fail");
+    public void commit(TccTransaction transaction ) {
+        invoke(transaction, resource.getConfirmMethod(), resource.getTargetBean(), args, " commit fail");
     }
 
-    public void rollback() {
-        invoke(resource.getRollbackMethod(), resource.getTargetBean(), args, " rollback fail");
+    public void rollback(TccTransaction transaction) {
+        invoke(transaction, resource.getRollbackMethod(), resource.getTargetBean(), args, " rollback fail");
     }
 
-    private void invoke(Method method, Object targetBean, Object[] args, String errorMsg) {
-        TccTransaction transaction = TccHolder.getTransaction();
-        if (transaction == null) {
-            throw new TccException("transaction is null");
-        }
+    private void invoke(TccTransaction transaction ,Method method, Object targetBean, Object[] args, String errorMsg) {
+
         if (Objects.equals(resource.getResourceType(), TccResourceType.LOCAL)) {
             try {
                 method.invoke(targetBean, args);
