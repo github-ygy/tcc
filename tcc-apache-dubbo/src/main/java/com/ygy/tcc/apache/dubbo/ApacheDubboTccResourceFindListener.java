@@ -73,7 +73,7 @@ public class ApacheDubboTccResourceFindListener implements ApplicationListener<C
             }
             Class<?>[] parameterTypes = method.getParameterTypes();
             TccResource resource = new TccResource();
-            resource.setResourceId(TccUtil.getResourceId(annotation,interfaceClass,method));
+            resource.setResourceId(TccUtil.getResourceId(annotation.resourceId(), interfaceClass, method));
             resource.setResourceType(TccResourceType.DUBBO_REFERENCE);
             resource.setParameterTypes(parameterTypes);
             resource.setTargetClass(interfaceClass);

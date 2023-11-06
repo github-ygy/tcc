@@ -1,4 +1,4 @@
-package com.ygy.tcc.notification;
+package com.ygy.tcc.notification.enums;
 
 
 public enum BestEffortNotificationStatus {

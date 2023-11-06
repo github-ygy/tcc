@@ -41,7 +41,7 @@ public class TccMethodFilter implements Filter {
             TccMethod tccMethod = method.getAnnotation(TccMethod.class);
             if (tccMethod != null) {
                 if (Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
-                    TccParticipant participant = addDubboParticipant(TccUtil.getResourceId(tccMethod, invoker.getInterface(), method), transaction, invocation);
+                    TccParticipant participant = addDubboParticipant(TccUtil.getResourceId(tccMethod.resourceId(), invoker.getInterface(), method), transaction, invocation);
                     try {
                         RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participant.getParticipantId())));
                         Result result = invoker.invoke(invocation);

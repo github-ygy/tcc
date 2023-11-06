@@ -1,4 +1,4 @@
-package com.ygy.tcc.core.configration;
+package com.ygy.tcc.core.configuration;
 
 
 import lombok.Data;

@@ -1,13 +1,16 @@
-package com.ygy.tcc.core.listener;
+package com.ygy.tcc.notification.listenner;
 
 
-import com.ygy.tcc.annotation.TccMethod;
 import com.ygy.tcc.core.aop.annotation.Local;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
 import com.ygy.tcc.core.participant.TccResource;
-import com.ygy.tcc.core.enums.TccResourceType;
 import com.ygy.tcc.core.util.TccUtil;
+import com.ygy.tcc.notification.BestEffortNotificationDoneResult;
+import com.ygy.tcc.notification.BestEffortNotificationResource;
+import com.ygy.tcc.notification.annotation.BestEffortNotification;
+import com.ygy.tcc.notification.enums.BestEffortNotificationDoneStatus;
+import com.ygy.tcc.notification.holder.BestEffortNotificationHolder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.aop.framework.AopProxy;
 import org.springframework.aop.support.AopUtils;
@@ -19,8 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 
-public class LocalTccResourceFindListener implements ApplicationListener<ContextRefreshedEvent> {
-
+public class BestEffortNotificationResourceFindListener implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -28,22 +30,21 @@ public class LocalTccResourceFindListener implements ApplicationListener<Context
 
         TccLogger.info("TccResourceFindListener onApplicationEvent start");
 
-        findLocalTccMethodBean(context);
+        findLocalBestEffortNotificationMethodBean(context);
     }
 
-    private void findLocalTccMethodBean(ApplicationContext context) {
+    private void findLocalBestEffortNotificationMethodBean(ApplicationContext context) {
         String[] beanNamesForType = context.getBeanNamesForType(Object.class);
         if (ArrayUtils.isEmpty(beanNamesForType)) {
             return;
         }
         for (String beanName : beanNamesForType) {
             Object bean = context.getBean(beanName);
-            addTccResourceFromLocalSpringBean(bean);
+            addBestEffortNotificationResourceFromLocalSpringBean(bean);
         }
-
     }
 
-    private void addTccResourceFromLocalSpringBean(Object bean) {
+    private void addBestEffortNotificationResourceFromLocalSpringBean(Object bean) {
         Object targetBean = null;
         try {
             targetBean = getSpringTargetBean(bean);
@@ -58,40 +59,43 @@ public class LocalTccResourceFindListener implements ApplicationListener<Context
         }
         TccHolder.holdLocalClass(beanClass);
         for (Method method : beanClass.getMethods()) {
-            TccMethod annotation = method.getAnnotation(TccMethod.class);
+            BestEffortNotification annotation = method.getAnnotation(BestEffortNotification.class);
             if (annotation == null) {
                 continue;
             }
             Class<?>[] parameterTypes = method.getParameterTypes();
-            TccResource resource = new TccResource();
+            BestEffortNotificationResource resource = new BestEffortNotificationResource();
             resource.setResourceId(TccUtil.getResourceId(annotation.resourceId(), beanClass, method));
-            resource.setResourceType(TccResourceType.LOCAL);
             resource.setParameterTypes(parameterTypes);
             resource.setTargetClass(beanClass);
-            resource.setConfirmMethodName(annotation.commitMethod());
-            resource.setRollbackMethodName(annotation.rollBackMethod());
+            resource.setMaxCheckTimes(annotation.maxCheckTimes());
+            resource.setDelayCheckSpanSeconds(annotation.delayCheckSpanSeconds());
             resource.setTargetBean(bean);
             try {
-                Method confirmMethod = beanClass.getMethod(annotation.commitMethod(), parameterTypes);
-                resource.setConfirmMethod(confirmMethod);
+                Method checkMethod = beanClass.getMethod(annotation.checkMethod(), parameterTypes);
+                BestEffortNotification checkMethodAnnotation = checkMethod.getAnnotation(BestEffortNotification.class);
+                if (checkMethodAnnotation != null) {
+                    TccLogger.error("checkMethod:" + annotation.checkMethod() + " is also a notification method,ignore");
+                    continue;
+                }
+                Class<?> returnType = checkMethod.getReturnType();
+                if (returnType != BestEffortNotificationDoneResult.class && returnType != BestEffortNotificationDoneStatus.class) {
+                    TccLogger.error("checkMethod:" + annotation.checkMethod() + " return type is not  BestEffortNotificationDoneResult or BestEffortNotificationDoneStatus,ignore");
+                    continue;
+                }
+                resource.setCheckMethod(checkMethod);
             } catch (Exception exception) {
-                TccLogger.error("not find confirmMethod:" + annotation.commitMethod(), exception);
+                TccLogger.error("not find checkMethod:" + annotation.checkMethod(), exception);
                 continue;
             }
-            try {
-                Method rollbackMethod = beanClass.getMethod(annotation.rollBackMethod(), parameterTypes);
-                resource.setRollbackMethod(rollbackMethod);
-            } catch (Exception exception) {
-                TccLogger.error("not find rollbackMethod:" + annotation.rollBackMethod(), exception);
-                continue;
-            }
-            TccResource existResource = TccHolder.getTccResource(resource.getResourceId(), resource.getResourceType());
+            TccLogger.info("add bestEffortNotification resource:" + resource.getResourceId());
+            BestEffortNotificationResource existResource = BestEffortNotificationHolder.getResource(resource.getResourceId());
             if (existResource != null) {
-                TccLogger.error("exist resource:" + resource.getResourceId());
+                TccLogger.error("exist bestEffortNotification resource:" + resource.getResourceId());
                 continue;
             }
-            TccLogger.info("add local resource:" + resource.getResourceId());
-            TccHolder.addTccResource(resource);
+            TccLogger.info("add local bestEffortNotification resource:" + resource.getResourceId());
+            BestEffortNotificationHolder.addResource(resource);
         }
     }
 

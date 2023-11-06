@@ -1,4 +1,4 @@
-package com.ygy.tcc.core.configration;
+package com.ygy.tcc.core.configuration;
 
 import com.ygy.tcc.core.TccTransactionManager;
 import com.ygy.tcc.core.aop.LocalTccMethodAop;

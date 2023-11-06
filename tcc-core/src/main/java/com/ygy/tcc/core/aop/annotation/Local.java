@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface LocalTcc {
+public @interface Local {
 
 
 }

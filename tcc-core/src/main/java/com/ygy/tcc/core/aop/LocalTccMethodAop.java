@@ -72,7 +72,7 @@ public class LocalTccMethodAop implements Ordered {
     private TccResource parseAndGetResourceFromLocal(ProceedingJoinPoint jp) {
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
         TccMethod tccMethod = method.getAnnotation(TccMethod.class);
-        String resourceId = TccUtil.getResourceId(tccMethod, jp.getTarget().getClass(), method);
+        String resourceId = TccUtil.getResourceId(tccMethod.resourceId(), jp.getTarget().getClass(), method);
         return TccHolder.getTccResource(resourceId, TccResourceType.LOCAL);
     }
 

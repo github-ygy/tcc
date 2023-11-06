@@ -22,8 +22,8 @@ import java.util.List;
 
 public class TccUtil {
 
-    public static String getResourceId(TccMethod annotation, Class<?> interfaceClass, Method method) {
-        return StringUtils.isEmpty(annotation.resourceId()) ? interfaceClass.getName() + "#" + method.getName() : annotation.resourceId();
+    public static String getResourceId(String resourceId, Class<?> interfaceClass, Method method) {
+        return StringUtils.isEmpty(resourceId) ? interfaceClass.getName() + "#" + method.getName() : resourceId;
     }
 
     public static TccTransactionDO toTccTransactionDO(TccTransaction transaction) {

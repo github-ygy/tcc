@@ -1,8 +1,7 @@
 package com.ygy.tcc.core;
 
 
-import com.ygy.tcc.core.configration.TccConfigProps;
-import com.ygy.tcc.core.configration.TccProperties;
+import com.ygy.tcc.core.configuration.TccProperties;
 import com.ygy.tcc.core.enums.TccParticipantStatus;
 import com.ygy.tcc.core.enums.TccStatus;
 import com.ygy.tcc.core.enums.TransactionRole;

@@ -3,7 +3,7 @@ package com.ygy.tcc.recovery;
 
 import com.ygy.tcc.core.TccTransaction;
 import com.ygy.tcc.core.TccTransactionManager;
-import com.ygy.tcc.core.configration.TccProperties;
+import com.ygy.tcc.core.configuration.TccProperties;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
 import com.ygy.tcc.core.recovery.TccRecoveryJobTask;

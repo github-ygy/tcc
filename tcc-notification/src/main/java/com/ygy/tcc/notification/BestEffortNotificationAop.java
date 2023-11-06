@@ -1,7 +1,12 @@
 package com.ygy.tcc.notification;
 
+import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
+import com.ygy.tcc.core.util.TccUtil;
 import com.ygy.tcc.notification.annotation.BestEffortNotification;
+import com.ygy.tcc.notification.enums.BestEffortNotificationDoneStatus;
+import com.ygy.tcc.notification.enums.BestEffortNotificationStatus;
+import com.ygy.tcc.notification.holder.BestEffortNotificationHolder;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,7 +24,7 @@ import java.lang.reflect.Method;
 public class BestEffortNotificationAop implements Ordered {
 
 
-    @Pointcut("@annotation(com.ygy.tcc.annotation.BestEffortNotification)")
+    @Pointcut("@annotation(com.ygy.tcc.notification.annotation.BestEffortNotification)")
     private void pointcut() {
     }
 
@@ -30,15 +35,17 @@ public class BestEffortNotificationAop implements Ordered {
     public Object around(ProceedingJoinPoint jp) throws Throwable {
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
         BestEffortNotification notification = method.getAnnotation(BestEffortNotification.class);
-        BestEffortNotificationTransaction transaction = bestEffortNotificationTransactionManager.newTransaction(notification.resourceId(), jp.getArgs());
-        //入库
+        if (!TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
+            return jp.proceed();
+        }
+        BestEffortNotificationTransaction transaction = bestEffortNotificationTransactionManager.newTransaction(TccUtil.getResourceId(notification.resourceId(), jp.getTarget().getClass(), method), jp.getArgs());
         if (notification.afterCommitSynchronization()) {
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
                     @Override
                     public void afterCommit() {
                         try {
-                            doProceed(transaction, jp);
+                            bestEffortNotificationTransactionManager.doProceed(transaction, jp);
                         } catch (Throwable ex) {
                             TccLogger.error("notification execute fail", ex);
                         }
@@ -47,16 +54,10 @@ public class BestEffortNotificationAop implements Ordered {
                 return null;
             }
         }
-        return doProceed(transaction, jp);
+        return bestEffortNotificationTransactionManager.doProceed(transaction, jp);
     }
 
-    private Object doProceed(BestEffortNotificationTransaction transaction, ProceedingJoinPoint jp) throws Throwable {
-        try {
-            return jp.proceed();
-        } finally {
-            bestEffortNotificationTransactionManager.checkMethod(transaction);
-        }
-    }
+
 
     @Override
     public int getOrder() {

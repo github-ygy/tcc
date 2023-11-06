@@ -1,12 +1,13 @@
 package com.ygy.tcc.notification;
 
+import com.ygy.tcc.notification.enums.BestEffortNotificationStatus;
 import lombok.Data;
+
+import java.io.Serializable;
 
 
 @Data
-public class BestEffortNotificationTransaction {
-
-    private BestEffortNotificationStatus status;
+public class BestEffortNotificationTransaction implements Serializable {
 
     private String notificationId;
 
@@ -20,10 +21,16 @@ public class BestEffortNotificationTransaction {
 
     private long updateTime;
 
-    private long lastCheckTime;
+    private long nextCheckTime;
+
+    private int retryTimes;
 
     private Object[] args;
 
+    private BestEffortNotificationStatus status;
 
+    private BestEffortNotificationStatus preStatus;
+
+    private String remark;
 
 }
