@@ -1,4 +1,4 @@
-package com.ygy.tcc.notification;
+package com.ygy.tcc.notification.result;
 
 
 import com.ygy.tcc.notification.enums.BestEffortNotificationDoneStatus;

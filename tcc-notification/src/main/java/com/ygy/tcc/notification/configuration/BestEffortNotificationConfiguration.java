@@ -1,6 +1,6 @@
 package com.ygy.tcc.notification.configuration;
 
-import com.ygy.tcc.notification.BestEffortNotificationAop;
+import com.ygy.tcc.notification.aop.BestEffortNotificationAop;
 import com.ygy.tcc.notification.BestEffortNotificationTransactionManager;
 import com.ygy.tcc.notification.delay.BestEffortNotificationDelayTaskJob;
 import com.ygy.tcc.notification.delay.DefaultBestEffortNotificationDelayTaskJob;

@@ -10,7 +10,7 @@ import com.ygy.tcc.notification.exception.BestEffortNotificationException;
 import com.ygy.tcc.notification.generator.IdGenerator;
 import com.ygy.tcc.notification.holder.BestEffortNotificationHolder;
 import com.ygy.tcc.notification.repository.BestEffortNotificationTransactionRepository;
-import org.apache.commons.lang3.ObjectUtils;
+import com.ygy.tcc.notification.result.BestEffortNotificationDoneResult;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 import javax.annotation.Resource;
@@ -42,21 +42,34 @@ public class BestEffortNotificationTransactionManager {
         bestEffortNotificationTransaction.setResourceId(resourceId);
         bestEffortNotificationTransaction.setStatus(BestEffortNotificationStatus.PREPARE);
         bestEffortNotificationTransaction.setArgs(args);
-        bestEffortNotificationTransaction.setNotificationId(generateNotificationId());
+        bestEffortNotificationTransaction.setNotificationId(generateNotificationId(resourceId, args));
         bestEffortNotificationTransactionRepository.create(bestEffortNotificationTransaction);
         return bestEffortNotificationTransaction;
     }
 
 
-    public String generateNotificationId() {
-        return idGenerator.generateNotificationId();
+    public String generateNotificationId(String resourceId, Object... args) {
+        return idGenerator.generateNotificationId(resourceId, args);
     }
 
     public void checkMethod(BestEffortNotificationTransaction transaction) {
         if (transaction.getStatus() == BestEffortNotificationStatus.PREPARE) {
             BestEffortNotificationResource resource = BestEffortNotificationHolder.getResource(transaction.getResourceId());
             try {
-                Object invoke = resource.getCheckMethod().invoke(resource.getTargetBean(), transaction.getArgs());
+                Object invoke = null;
+                BestEffortNotificationTransactionContext suspendTransactionContext = BestEffortNotificationHolder.getTransactionContext();
+                try {
+                    BestEffortNotificationHolder.bindTransactionContext(new BestEffortNotificationTransactionContext(transaction.getNotificationId()));
+                    invoke = resource.getCheckMethod().invoke(resource.getTargetBean(), transaction.getArgs());
+                } finally {
+                    BestEffortNotificationTransactionContext existTransactionContext = BestEffortNotificationHolder.getTransactionContext();
+                    if (Objects.equals(existTransactionContext.getNotificationId(), transaction.getNotificationId())) {
+                        BestEffortNotificationHolder.clearTransactionContext();
+                    }
+                    if (suspendTransactionContext != null) {
+                        BestEffortNotificationHolder.bindTransactionContext(suspendTransactionContext);
+                    }
+                }
                 checkResult(invoke, transaction);
             } catch (Exception exception) {
                 TccLogger.error("check method execute fail", exception);
@@ -70,7 +83,7 @@ public class BestEffortNotificationTransactionManager {
     }
 
     private boolean isDone(BestEffortNotificationStatus status) {
-        return Objects.equals(status,BestEffortNotificationStatus.SUCCESS) || Objects.equals(status,BestEffortNotificationStatus.CANCEL);
+        return Objects.equals(status, BestEffortNotificationStatus.SUCCESS) || Objects.equals(status, BestEffortNotificationStatus.CANCEL);
     }
 
     public void addDelayCheckTask(BestEffortNotificationTransaction transaction) {
@@ -82,7 +95,7 @@ public class BestEffortNotificationTransactionManager {
         BestEffortNotificationResource resource = BestEffortNotificationHolder.getResource(transaction.getResourceId());
         if (resource.getMaxCheckTimes() > transaction.getCheckTimes()) {
             transaction.setCheckTimes(transaction.getCheckTimes() + 1);
-            nextDelaySpanSeconds =  resource.getDelayCheckSpanSeconds();
+            nextDelaySpanSeconds = resource.getDelayCheckSpanSeconds();
         }
         if (nextDelaySpanSeconds > 0) {
             try {
@@ -91,7 +104,7 @@ public class BestEffortNotificationTransactionManager {
             } catch (Exception exception) {
                 TccLogger.warn("add delay check task fail", exception);
             }
-        }else {
+        } else {
             transaction.setStatus(BestEffortNotificationStatus.CANCEL);
             transaction.setRemark("delay time end");
         }
@@ -100,17 +113,29 @@ public class BestEffortNotificationTransactionManager {
 
 
     public Object doProceed(BestEffortNotificationTransaction transaction, ProceedingJoinPoint jp) throws Throwable {
-        Object proceed = jp.proceed();
-        if (proceed == null) {
-            this.addDelayCheckTask(transaction);
-            return null;
+        Object proceed = null;
+        BestEffortNotificationTransactionContext suspendTransactionContext = BestEffortNotificationHolder.getTransactionContext();
+        try {
+            BestEffortNotificationHolder.bindTransactionContext(new BestEffortNotificationTransactionContext(transaction.getNotificationId()));
+            proceed = jp.proceed();
+        } finally {
+            BestEffortNotificationTransactionContext existTransactionContext = BestEffortNotificationHolder.getTransactionContext();
+            if (Objects.equals(existTransactionContext.getNotificationId(), transaction.getNotificationId())) {
+                BestEffortNotificationHolder.clearTransactionContext();
+            }
+            if (suspendTransactionContext != null) {
+                BestEffortNotificationHolder.bindTransactionContext(suspendTransactionContext);
+            }
         }
-        checkResult(proceed, transaction);
-        if (isDone(transaction.getStatus())) {
-            bestEffortNotificationTransactionRepository.update(transaction);
-        } else {
-            addDelayCheckTask(transaction);
+
+        if (proceed instanceof BestEffortNotificationDoneStatus || proceed instanceof BestEffortNotificationDoneResult) {
+            checkResult(proceed, transaction);
+            if (isDone(transaction.getStatus())) {
+                bestEffortNotificationTransactionRepository.update(transaction);
+                return proceed;
+            }
         }
+        this.addDelayCheckTask(transaction);
         return proceed;
     }
 
@@ -121,7 +146,7 @@ public class BestEffortNotificationTransactionManager {
             ((BestEffortNotificationDoneResult) result).setNotificationId(transaction.getNotificationId());
             BestEffortNotificationDoneStatus doneStatus = ((BestEffortNotificationDoneResult) result).getDoneStatus();
             doAfterDoneStatus(doneStatus, transaction);
-        }else {
+        } else {
             throw new BestEffortNotificationException("check method return type error");
         }
     }

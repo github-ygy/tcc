@@ -38,7 +38,7 @@ public class TccTransactionRepository {
 
     public TccRecoveryLoadResult loadNeedRecoverTransactions(String tccAppId, String cursor) {
         TccTransactionDoQueryResult tccTransactionDoQueryResult = tccTransactionMapper.loadNeedRecoverTransactions(tccAppId, cursor);
-        if (CollectionUtils.isEmpty(tccTransactionDoQueryResult.getNeedRecoverTransactionDos())) {
+        if (tccTransactionDoQueryResult == null || CollectionUtils.isEmpty(tccTransactionDoQueryResult.getNeedRecoverTransactionDos())) {
             return new TccRecoveryLoadResult(Lists.newArrayList(), "");
         }
         List<TccTransaction> tccTransactions = Lists.newArrayList();
