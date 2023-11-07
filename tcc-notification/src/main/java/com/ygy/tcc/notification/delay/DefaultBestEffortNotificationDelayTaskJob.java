@@ -16,11 +16,11 @@ public class DefaultBestEffortNotificationDelayTaskJob implements BestEffortNoti
 
     private static final Timer DELAY = new HashedWheelTimer();
 
-    private int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2 + 1;
+    private static final int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2 + 1;
 
-    private int threadQueueSize = 1024;
+    private static final int threadQueueSize = 1024;
 
-    private ThreadPoolExecutor asyncPoolExecutor = new ThreadPoolExecutor(1, threadPoolSize, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(threadQueueSize), new ThreadPoolExecutor.CallerRunsPolicy());
+    private static final ThreadPoolExecutor asyncPoolExecutor = new ThreadPoolExecutor(1, threadPoolSize, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(threadQueueSize), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override
     public void delayCheck(BestEffortNotificationTransaction transaction, long delaySeconds){
