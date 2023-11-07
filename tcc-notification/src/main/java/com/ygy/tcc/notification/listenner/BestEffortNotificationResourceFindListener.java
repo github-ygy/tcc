@@ -67,6 +67,10 @@ public class BestEffortNotificationResourceFindListener implements ApplicationLi
             resource.setResourceId(TccUtil.getResourceId(annotation.resourceId(), beanClass, method));
             resource.setParameterTypes(parameterTypes);
             resource.setTargetClass(beanClass);
+            if (annotation.maxCheckTimes() < 0 || annotation.delayCheckSpanSeconds() < 0) {
+                TccLogger.error("maxCheckTimes or delayCheckSpanSeconds must be > 0 :" + resource.getResourceId());
+                continue;
+            }
             resource.setMaxCheckTimes(annotation.maxCheckTimes());
             resource.setDelayCheckSpanSeconds(annotation.delayCheckSpanSeconds());
             resource.setTargetBean(bean);
