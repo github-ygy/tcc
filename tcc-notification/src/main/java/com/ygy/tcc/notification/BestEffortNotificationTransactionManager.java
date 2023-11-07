@@ -33,7 +33,7 @@ public class BestEffortNotificationTransactionManager {
     private BestEffortNotificationTransactionRepository bestEffortNotificationTransactionRepository;
 
 
-    public BestEffortNotificationTransaction newTransaction(String resourceId, Object... args) {
+    public BestEffortNotificationTransaction newTransaction(String resourceId, Object[] args) {
         BestEffortNotificationResource resource = BestEffortNotificationHolder.getResource(resourceId);
         if (resource == null) {
             throw new BestEffortNotificationException("resource not found:" + resourceId);
@@ -48,7 +48,7 @@ public class BestEffortNotificationTransactionManager {
     }
 
 
-    public String generateNotificationId(String resourceId, Object... args) {
+    public String generateNotificationId(String resourceId, Object[] args) {
         return idGenerator.generateNotificationId(resourceId, args);
     }
 

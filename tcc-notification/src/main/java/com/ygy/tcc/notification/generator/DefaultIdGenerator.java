@@ -6,7 +6,7 @@ import java.util.UUID;
 public class DefaultIdGenerator implements IdGenerator {
 
     @Override
-    public String generateNotificationId(String resourceId, Object args) {
+    public String generateNotificationId(String resourceId, Object[] args) {
         return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
