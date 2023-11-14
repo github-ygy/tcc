@@ -3,7 +3,9 @@ package com.ygy.tcc.alibaba.dubbo.filter;
 import com.alibaba.dubbo.common.extension.Activate;
 import com.alibaba.dubbo.rpc.*;
 import com.ygy.tcc.alibaba.dubbo.constants.TccDubboConstants;
+import com.ygy.tcc.core.enums.TccParticipantStatus;
 import com.ygy.tcc.core.holder.TccHolder;
+import com.ygy.tcc.core.participant.TccParticipantHookManager;
 import com.ygy.tcc.core.participant.TccPropagationContext;
 import com.ygy.tcc.core.util.GsonUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +22,7 @@ public class TccPropagationContextFilter implements Filter {
         try {
             if (propagationContext != null) {
                 TccHolder.bindPropagationContext(propagationContext);
+                TccParticipantHookManager.doParticipantHook(propagationContext);
             }
             return invoker.invoke(invocation);
         } finally {

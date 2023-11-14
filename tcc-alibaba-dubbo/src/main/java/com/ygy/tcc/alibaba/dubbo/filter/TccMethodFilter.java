@@ -43,7 +43,7 @@ public class TccMethodFilter implements Filter {
                 if (Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
                     TccParticipant participant = addDubboParticipant(TccUtil.getResourceId(tccMethod.resourceId(), invoker.getInterface(), method), transaction, invocation);
                     try {
-                        RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participant.getParticipantId())));
+                        RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participant.getParticipantId(), participant.getStatus(), participant.getResource().getResourceId())));
                         Result result = invoker.invoke(invocation);
                         participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
                         return result;
@@ -57,7 +57,7 @@ public class TccMethodFilter implements Filter {
             if (propagationContext != null) {
                 RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(propagationContext));
             }else {
-                RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), null)));
+                RpcContext.getContext().setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), null, null, null)));
             }
             return invoker.invoke(invocation);
         } catch (Exception ex) {

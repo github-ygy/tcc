@@ -8,9 +8,13 @@ public enum TccParticipantStatus {
 
     TRY_FAIL,
 
+    CONFIRMING,
+
     CONFIRM_SUCCESS,
 
     CONFIRM_FAIL,
+
+    ROLLBACKING,
 
     ROLLBACK_SUCCESS,
 

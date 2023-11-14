@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 
 
-@AllArgsConstructor
 @Data
 public class TccPropagationContext implements Serializable {
 
@@ -21,6 +20,19 @@ public class TccPropagationContext implements Serializable {
     private TccStatus tccStatus;
 
     private String participantId;
+
+    private TccParticipantStatus participantStatus;
+
+    private String resourceId;
+
+    public TccPropagationContext(String tccAppId, String tccId, TccStatus tccStatus, String participantId, TccParticipantStatus participantStatus, String resourceId) {
+        this.tccAppId = tccAppId;
+        this.tccId = tccId;
+        this.tccStatus = tccStatus;
+        this.participantId = participantId;
+        this.participantStatus = participantStatus;
+        this.resourceId = resourceId;
+    }
 
 
 }

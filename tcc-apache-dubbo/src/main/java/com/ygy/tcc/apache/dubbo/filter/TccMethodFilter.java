@@ -44,7 +44,7 @@ public class TccMethodFilter implements Filter {
                 if (Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING)) {
                     TccParticipant participant = addDubboParticipant(TccUtil.getResourceId(tccMethod.resourceId(), invoker.getInterface(), method), transaction, invocation);
                     try {
-                        invocation.setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participant.getParticipantId())));
+                        invocation.setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participant.getParticipantId(), participant.getStatus(), participant.getResource().getResourceId())));
                         Result result = invoker.invoke(invocation);
                         participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
                         return result;
@@ -58,7 +58,7 @@ public class TccMethodFilter implements Filter {
             if (propagationContext != null) {
                 invocation.setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(propagationContext));
             } else {
-                invocation.setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), null)));
+                invocation.setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), null, null, null)));
             }
             return invoker.invoke(invocation);
         } catch (Exception ex) {

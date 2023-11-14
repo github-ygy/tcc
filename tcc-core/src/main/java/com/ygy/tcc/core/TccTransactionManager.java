@@ -94,6 +94,7 @@ public class TccTransactionManager {
                 for (TccParticipant participant : transaction.getParticipants()) {
                     if (!participant.getStatus().equals(TccParticipantStatus.ROLLBACK_SUCCESS)) {
                         try {
+                            participant.setStatus(TccParticipantStatus.ROLLBACKING);
                             participant.rollback(transaction);
                             participant.setStatus(TccParticipantStatus.ROLLBACK_SUCCESS);
                         } catch (TccException exception) {
@@ -149,6 +150,7 @@ public class TccTransactionManager {
                 for (TccParticipant participant : transaction.getParticipants()) {
                     if (!participant.getStatus().equals(TccParticipantStatus.CONFIRM_SUCCESS)) {
                         try {
+                            participant.setStatus(TccParticipantStatus.CONFIRMING);
                             participant.commit(transaction);
                             participant.setStatus(TccParticipantStatus.CONFIRM_SUCCESS);
                         } catch (TccException tccException) {

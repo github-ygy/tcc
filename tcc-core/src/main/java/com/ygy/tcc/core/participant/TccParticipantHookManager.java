@@ -2,6 +2,7 @@ package com.ygy.tcc.core.participant;
 
 
 import com.google.common.collect.Lists;
+import com.ygy.tcc.core.enums.TccParticipantStatus;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
@@ -36,30 +37,47 @@ public class TccParticipantHookManager {
         }
     }
 
-    public static void triggerBeforeExecuteTry() {
+    public static void doParticipantHook(TccPropagationContext propagationContext) {
+        if (propagationContext == null || propagationContext.getParticipantStatus() == null) {
+            return;
+        }
+        switch (propagationContext.getParticipantStatus()) {
+            case TRYING:
+                TccParticipantHookManager.triggerBeforeExecuteTry(propagationContext);
+                break;
+            case CONFIRMING:
+                TccParticipantHookManager.triggerBeforeExecuteConfirm(propagationContext);
+                break;
+            case ROLLBACKING:
+                TccParticipantHookManager.triggerBeforeExecuteRollback(propagationContext);
+                break;
+        }
+    }
+
+    private static void triggerBeforeExecuteTry(TccPropagationContext propagationContext) {
         List<TccParticipantHook> hooks = getParticipantHooks();
         if (CollectionUtils.isNotEmpty(hooks)) {
             for (TccParticipantHook hook : hooks) {
-                hook.beforeExecuteTry();
+                hook.beforeExecuteTry(propagationContext);
             }
         }
     }
 
-    public static void triggerBeforeExecuteConfirm() {
+    private static void triggerBeforeExecuteConfirm(TccPropagationContext propagationContext) {
         List<TccParticipantHook> hooks = getParticipantHooks();
         if (CollectionUtils.isNotEmpty(hooks)) {
             for (TccParticipantHook hook : hooks) {
-                hook.beforeExecuteConfirm();
+                hook.beforeExecuteConfirm(propagationContext);
             }
         }
 
     }
 
-    public static void triggerBeforeExecuteRollback() {
+    private static void triggerBeforeExecuteRollback(TccPropagationContext propagationContext) {
         List<TccParticipantHook> hooks = getParticipantHooks();
         if (CollectionUtils.isNotEmpty(hooks)) {
             for (TccParticipantHook hook : hooks) {
-                hook.beforeExecuteRollback();
+                hook.beforeExecuteRollback(propagationContext);
             }
         }
     }

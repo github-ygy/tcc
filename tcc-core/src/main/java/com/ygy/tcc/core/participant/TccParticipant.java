@@ -35,9 +35,10 @@ public class TccParticipant {
     }
 
     private void invoke(TccTransaction transaction ,Method method, Object targetBean, Object[] args, String errorMsg) {
-
+        TccPropagationContext propagationContext = new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participantId, status, resource.getResourceId());
         if (Objects.equals(resource.getResourceType(), TccResourceType.LOCAL)) {
             try {
+                TccParticipantHookManager.doParticipantHook(propagationContext);
                 method.invoke(targetBean, args);
             } catch (Exception exception) {
                 throw new TccException("invoke error:" + errorMsg, exception);
@@ -46,8 +47,7 @@ public class TccParticipant {
         }
         TccPropagationContext suspendPropagationContext = TccHolder.getPropagationContext();
         try {
-            TccPropagationContext tccPropagationContext = new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participantId);
-            TccHolder.bindPropagationContext(tccPropagationContext);
+            TccHolder.bindPropagationContext(propagationContext);
             method.invoke(targetBean, args);
         } catch (Exception exception) {
             throw new TccException("invoke error:" + errorMsg, exception);

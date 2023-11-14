@@ -2,6 +2,7 @@ package com.ygy.tcc.apache.dubbo.filter;
 
 import com.ygy.tcc.apache.dubbo.constants.TccDubboConstants;
 import com.ygy.tcc.core.holder.TccHolder;
+import com.ygy.tcc.core.participant.TccParticipantHookManager;
 import com.ygy.tcc.core.participant.TccPropagationContext;
 import com.ygy.tcc.core.util.GsonUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +22,7 @@ public class TccPropagationContextFilter implements Filter {
         try {
             if (propagationContext != null) {
                 TccHolder.bindPropagationContext(propagationContext);
+                TccParticipantHookManager.doParticipantHook(propagationContext);
             }
             return invoker.invoke(invocation);
         } finally {

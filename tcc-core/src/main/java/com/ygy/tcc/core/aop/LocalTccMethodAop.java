@@ -40,6 +40,7 @@ public class LocalTccMethodAop implements Ordered {
         if (transaction != null && Objects.equals(transaction.getRole(), TransactionRole.Initiator) && Objects.equals(transaction.getStatus(), TccStatus.TRYING) && TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
             TccParticipant participant = addLocalParticipant(jp, transaction);
             try {
+                TccParticipantHookManager.doParticipantHook(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participant.getParticipantId(), participant.getStatus(), participant.getResource().getResourceId()));
                 Object result = jp.proceed();
                 participant.setStatus(TccParticipantStatus.TRY_SUCCESS);
                 return result;
