@@ -10,6 +10,7 @@ import com.ygy.tcc.core.enums.TransactionRole;
 import com.ygy.tcc.core.exception.TccException;
 import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.participant.TccParticipant;
+import com.ygy.tcc.core.participant.TccPropagationContext;
 import com.ygy.tcc.core.participant.TccResource;
 import com.ygy.tcc.core.repository.TccParticipantDO;
 import com.ygy.tcc.core.repository.TccTransactionDO;
@@ -18,12 +19,30 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Objects;
 
 
 public class TccUtil {
 
     public static String getResourceId(String resourceId, Class<?> interfaceClass, Method method) {
         return StringUtils.isEmpty(resourceId) ? interfaceClass.getName() + "#" + method.getName() : resourceId;
+    }
+
+    public static boolean checkIsParticipantMethod(TccPropagationContext propagationContext, Method method,TccResourceType resourceType) {
+        if (StringUtils.isEmpty(propagationContext.getResourceId())) {
+            return false;
+        }
+        TccResource tccResource = TccHolder.getTccResource(propagationContext.getResourceId(), resourceType);
+        if (tccResource == null) {
+            return false;
+        }
+        if (Objects.equals(propagationContext.getParticipantStatus(), TccParticipantStatus.CONFIRMING) && Objects.equals(tccResource.getConfirmMethod(), method)) {
+            return true;
+        }
+        if (Objects.equals(propagationContext.getParticipantStatus(), TccParticipantStatus.ROLLBACKING) && Objects.equals(tccResource.getRollbackMethod(), method)) {
+            return true;
+        }
+        return false;
     }
 
     public static TccTransactionDO toTccTransactionDO(TccTransaction transaction) {

@@ -4,6 +4,7 @@ import com.ygy.tcc.core.holder.TccHolder;
 import com.ygy.tcc.core.logger.TccLogger;
 import com.ygy.tcc.core.util.TccUtil;
 import com.ygy.tcc.notification.BestEffortNotificationTransaction;
+import com.ygy.tcc.notification.BestEffortNotificationTransactionContext;
 import com.ygy.tcc.notification.BestEffortNotificationTransactionManager;
 import com.ygy.tcc.notification.annotation.BestEffortNotification;
 import com.ygy.tcc.notification.enums.BestEffortNotificationDoneStatus;
@@ -20,6 +21,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 
 @Aspect
@@ -37,10 +39,11 @@ public class BestEffortNotificationAop implements Ordered {
     public Object around(ProceedingJoinPoint jp) throws Throwable {
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
         BestEffortNotification notification = method.getAnnotation(BestEffortNotification.class);
-        if (!TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
+        String bestEffortResourceId = TccUtil.getResourceId(notification.resourceId(), jp.getTarget().getClass(), method);
+        if (checkMethodIsLoopDo(bestEffortResourceId) && !TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
             return jp.proceed();
         }
-        BestEffortNotificationTransaction transaction = bestEffortNotificationTransactionManager.newTransaction(TccUtil.getResourceId(notification.resourceId(), jp.getTarget().getClass(), method), jp.getArgs());
+        BestEffortNotificationTransaction transaction = bestEffortNotificationTransactionManager.newTransaction(bestEffortResourceId, jp.getArgs());
         if (notification.afterCommitSynchronization()) {
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
@@ -59,6 +62,13 @@ public class BestEffortNotificationAop implements Ordered {
         return bestEffortNotificationTransactionManager.doProceed(transaction, jp);
     }
 
+    private boolean checkMethodIsLoopDo(String bestEffortResourceId) {
+        BestEffortNotificationTransactionContext existContext = BestEffortNotificationHolder.getTransactionContext();
+        if (existContext != null && Objects.equals(bestEffortResourceId, existContext.getResourceId())) {
+            return true;
+        }
+        return false;
+    }
 
 
     @Override

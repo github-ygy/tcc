@@ -59,7 +59,7 @@ public class BestEffortNotificationTransactionManager {
                 Object invoke = null;
                 BestEffortNotificationTransactionContext suspendTransactionContext = BestEffortNotificationHolder.getTransactionContext();
                 try {
-                    BestEffortNotificationHolder.bindTransactionContext(new BestEffortNotificationTransactionContext(transaction.getNotificationId()));
+                    BestEffortNotificationHolder.bindTransactionContext(new BestEffortNotificationTransactionContext(transaction.getNotificationId(), transaction.getResourceId()));
                     invoke = resource.getCheckMethod().invoke(resource.getTargetBean(), transaction.getArgs());
                 } finally {
                     BestEffortNotificationTransactionContext existTransactionContext = BestEffortNotificationHolder.getTransactionContext();
@@ -116,7 +116,7 @@ public class BestEffortNotificationTransactionManager {
         Object proceed = null;
         BestEffortNotificationTransactionContext suspendTransactionContext = BestEffortNotificationHolder.getTransactionContext();
         try {
-            BestEffortNotificationHolder.bindTransactionContext(new BestEffortNotificationTransactionContext(transaction.getNotificationId()));
+            BestEffortNotificationHolder.bindTransactionContext(new BestEffortNotificationTransactionContext(transaction.getNotificationId(), transaction.getResourceId()));
             proceed = jp.proceed();
         } finally {
             BestEffortNotificationTransactionContext existTransactionContext = BestEffortNotificationHolder.getTransactionContext();

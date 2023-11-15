@@ -11,8 +11,11 @@ public class BestEffortNotificationTransactionContext implements Serializable {
 
     private String notificationId;
 
-    public BestEffortNotificationTransactionContext(String notificationId) {
+    private String resourceId;
+
+    public BestEffortNotificationTransactionContext(String notificationId, String resourceId) {
         this.notificationId = notificationId;
+        this.resourceId = resourceId;
     }
 
 }

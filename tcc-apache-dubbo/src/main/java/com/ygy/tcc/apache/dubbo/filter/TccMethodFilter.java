@@ -55,7 +55,7 @@ public class TccMethodFilter implements Filter {
                 }
             }
             TccPropagationContext propagationContext = TccHolder.getPropagationContext();
-            if (propagationContext != null) {
+            if (propagationContext != null && TccUtil.checkIsParticipantMethod(propagationContext, method, TccResourceType.DUBBO_REFERENCE)) {
                 invocation.setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(propagationContext));
             } else {
                 invocation.setAttachment(TccDubboConstants.TCC_PROPAGATION_CONTEXT_DUBBO_KEY, GsonUtil.toJson(new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), null, null, null)));
@@ -65,6 +65,7 @@ public class TccMethodFilter implements Filter {
             throw new RpcException(ex);
         }
     }
+
 
     private TccParticipant addDubboParticipant(String resourceId, TccTransaction transaction, Invocation invocation) {
         TccParticipant tccParticipant = new TccParticipant();
