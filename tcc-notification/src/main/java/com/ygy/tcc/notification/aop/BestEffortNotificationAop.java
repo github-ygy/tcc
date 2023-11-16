@@ -40,7 +40,7 @@ public class BestEffortNotificationAop implements Ordered {
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
         BestEffortNotification notification = method.getAnnotation(BestEffortNotification.class);
         String bestEffortResourceId = TccUtil.getResourceId(notification.resourceId(), jp.getTarget().getClass(), method);
-        if (checkMethodIsLoopDo(bestEffortResourceId) && !TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
+        if (checkMethodIsLoopDo(bestEffortResourceId) || !TccHolder.checkIsLocalBean(jp.getTarget().getClass())) {
             return jp.proceed();
         }
         BestEffortNotificationTransaction transaction = bestEffortNotificationTransactionManager.newTransaction(bestEffortResourceId, jp.getArgs());

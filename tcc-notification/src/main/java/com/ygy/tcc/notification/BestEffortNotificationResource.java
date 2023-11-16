@@ -13,6 +13,8 @@ public class BestEffortNotificationResource {
 
     private Class<?> targetClass;
 
+    private Method notificationMethod;
+
     private Method checkMethod;
 
     private Class<?>[] parameterTypes;
@@ -22,5 +24,6 @@ public class BestEffortNotificationResource {
     private long delayCheckSpanSeconds;
 
     private int maxCheckTimes;
+
 
 }

@@ -34,7 +34,7 @@ public class TccParticipant {
         invoke(transaction, resource.getRollbackMethod(), resource.getTargetBean(), args, " rollback fail");
     }
 
-    private void invoke(TccTransaction transaction ,Method method, Object targetBean, Object[] args, String errorMsg) {
+    private void invoke(TccTransaction transaction, Method method, Object targetBean, Object[] args, String errorMsg) {
         TccPropagationContext propagationContext = new TccPropagationContext(transaction.getTccAppId(), transaction.getTccId(), transaction.getStatus(), participantId, status, resource.getResourceId());
         if (Objects.equals(resource.getResourceType(), TccResourceType.LOCAL)) {
             try {
@@ -51,7 +51,7 @@ public class TccParticipant {
             method.invoke(targetBean, args);
         } catch (Exception exception) {
             throw new TccException("invoke error:" + errorMsg, exception);
-        }finally {
+        } finally {
             TccPropagationContext currentPropagationContext = TccHolder.getPropagationContext();
             if (currentPropagationContext != null && Objects.equals(currentPropagationContext.getParticipantId(), participantId)) {
                 TccHolder.clearPropagationContext();

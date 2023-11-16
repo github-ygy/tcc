@@ -27,7 +27,7 @@ public class DefaultBestEffortNotificationDelayTaskJob implements BestEffortNoti
         DELAY.newTimeout((x) -> {
             asyncPoolExecutor.submit(() -> {
                 try {
-                    TccHolder.getHoldBean(BestEffortNotificationTransactionManager.class).checkMethod(transaction);
+                    TccHolder.getHoldBean(BestEffortNotificationTransactionManager.class).doCheckMethod(transaction);
                 } catch (Exception exception) {
                     TccLogger.error("check method error", exception);
                 }

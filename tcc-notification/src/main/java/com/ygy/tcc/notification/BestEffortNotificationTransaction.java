@@ -23,6 +23,8 @@ public class BestEffortNotificationTransaction implements Serializable {
 
     private long nextCheckTime;
 
+    private boolean retryWhenCheckFailed;
+
     private Object[] args;
 
     private BestEffortNotificationStatus status;
