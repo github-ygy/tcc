@@ -12,6 +12,7 @@ import com.ygy.tcc.notification.generator.IdGenerator;
 import com.ygy.tcc.notification.holder.BestEffortNotificationHolder;
 import com.ygy.tcc.notification.repository.BestEffortNotificationTransactionRepository;
 import com.ygy.tcc.notification.result.BestEffortNotificationDoneResult;
+import org.apache.commons.lang3.BooleanUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 import javax.annotation.Resource;
@@ -71,7 +72,7 @@ public class BestEffortNotificationTransactionManager {
                     bestEffortNotificationTransactionRepository.update(transaction);
                     return;
                 }
-                if (doneStatus == BestEffortNotificationDoneStatus.RETRY) {
+                if (BooleanUtils.isTrue(resource.getCheckRetryDoNotification()) && doneStatus == BestEffortNotificationDoneStatus.RETRY) {
                     try {
                         doRetryNotificationMethod(transaction);
                     } catch (Exception exception) {

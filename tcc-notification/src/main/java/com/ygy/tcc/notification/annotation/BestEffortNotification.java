@@ -18,4 +18,6 @@ public @interface BestEffortNotification {
 
     String checkMethod()  default "checkMethod";
 
+    boolean checkRetryDoNotification() default false;
+
 }
