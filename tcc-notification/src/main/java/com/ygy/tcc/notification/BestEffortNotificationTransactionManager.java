@@ -65,18 +65,20 @@ public class BestEffortNotificationTransactionManager {
             } catch (Exception exception) {
                 TccLogger.error("check method execute fail", exception);
             }
-            BestEffortNotificationDoneStatus doneStatus = checkResult(invoke, transaction);
-            if (isDone(transaction.getStatus())) {
-                bestEffortNotificationTransactionRepository.update(transaction);
-                return;
-            }
-            if (doneStatus == BestEffortNotificationDoneStatus.RETRY) {
-                try {
-                    doRetryNotificationMethod(transaction);
-                } catch (Exception exception) {
-                    TccLogger.warn("retry notification method fail", exception);
+            if (invoke != null) {
+                BestEffortNotificationDoneStatus doneStatus = checkResult(invoke, transaction);
+                if (isDone(transaction.getStatus())) {
+                    bestEffortNotificationTransactionRepository.update(transaction);
+                    return;
                 }
-                return;
+                if (doneStatus == BestEffortNotificationDoneStatus.RETRY) {
+                    try {
+                        doRetryNotificationMethod(transaction);
+                    } catch (Exception exception) {
+                        TccLogger.warn("retry notification method fail", exception);
+                    }
+                    return;
+                }
             }
             addDelayCheckTask(transaction);
         }
