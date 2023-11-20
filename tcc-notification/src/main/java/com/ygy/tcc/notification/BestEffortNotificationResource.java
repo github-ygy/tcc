@@ -25,7 +25,4 @@ public class BestEffortNotificationResource {
 
     private int maxCheckTimes;
 
-    private Boolean checkRetryDoNotification = false;
-
-
 }

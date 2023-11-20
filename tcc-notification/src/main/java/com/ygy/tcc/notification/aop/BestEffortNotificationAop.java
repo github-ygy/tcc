@@ -44,6 +44,36 @@ public class BestEffortNotificationAop implements Ordered {
             return jp.proceed();
         }
         BestEffortNotificationTransaction transaction = bestEffortNotificationTransactionManager.newTransaction(bestEffortResourceId, jp.getArgs());
+        if (notification.customNotificationMethod()) {
+            Object result = null;
+            try {
+                result = jp.proceed();
+            } catch (Exception exception) {
+                bestEffortNotificationTransactionManager.addDelayCheckTask(transaction);
+                throw exception;
+            }
+            if (notification.afterCommitSynchronization()) {
+                if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                bestEffortNotificationTransactionManager.doRetryNotificationMethod(transaction);
+                            } catch (Throwable ex) {
+                                TccLogger.error("notification execute fail", ex);
+                            }
+                        }
+                    });
+                    return result;
+                }
+            }
+            try {
+                bestEffortNotificationTransactionManager.doRetryNotificationMethod(transaction);
+            } catch (Throwable ex) {
+                TccLogger.error("notification execute fail", ex);
+            }
+            return result;
+        }
         if (notification.afterCommitSynchronization()) {
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {

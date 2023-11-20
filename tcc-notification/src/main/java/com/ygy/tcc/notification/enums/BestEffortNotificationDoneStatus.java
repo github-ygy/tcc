@@ -8,7 +8,8 @@ public enum BestEffortNotificationDoneStatus {
 
     SUCCESS,
     CANCEL,
-    RETRY;
+    RETRY,
+    IGNORE,
     ;
 
 

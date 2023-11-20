@@ -74,7 +74,17 @@ public class BestEffortNotificationResourceFindListener implements ApplicationLi
             resource.setMaxCheckTimes(annotation.maxCheckTimes());
             resource.setDelayCheckSpanSeconds(annotation.delayCheckSpanSeconds());
             resource.setTargetBean(bean);
-            resource.setNotificationMethod(method);
+            if (annotation.customNotificationMethod()) {
+                try {
+                    Method notificationMethod = beanClass.getMethod(annotation.notificationMethod(), parameterTypes);
+                    resource.setNotificationMethod(notificationMethod);
+                } catch (Exception exception) {
+                    TccLogger.error("not find notificationMethod:" + annotation.notificationMethod(), exception);
+                    continue;
+                }
+            }else {
+                resource.setNotificationMethod(method);
+            }
             try {
                 Method checkMethod = beanClass.getMethod(annotation.checkMethod(), parameterTypes);
                 BestEffortNotification checkMethodAnnotation = checkMethod.getAnnotation(BestEffortNotification.class);

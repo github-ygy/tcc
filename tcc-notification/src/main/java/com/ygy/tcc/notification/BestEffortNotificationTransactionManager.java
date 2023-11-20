@@ -72,7 +72,7 @@ public class BestEffortNotificationTransactionManager {
                     bestEffortNotificationTransactionRepository.update(transaction);
                     return;
                 }
-                if (BooleanUtils.isTrue(resource.getCheckRetryDoNotification()) && doneStatus == BestEffortNotificationDoneStatus.RETRY) {
+                if (doneStatus == BestEffortNotificationDoneStatus.RETRY) {
                     try {
                         doRetryNotificationMethod(transaction);
                     } catch (Exception exception) {
@@ -85,7 +85,7 @@ public class BestEffortNotificationTransactionManager {
         }
     }
 
-    private void doRetryNotificationMethod(BestEffortNotificationTransaction transaction) throws Exception {
+    public void doRetryNotificationMethod(BestEffortNotificationTransaction transaction) {
         BestEffortNotificationResource resource = BestEffortNotificationHolder.getResource(transaction.getResourceId());
         Object invoke = null;
         try {
@@ -101,7 +101,7 @@ public class BestEffortNotificationTransactionManager {
     public Object doProceed(BestEffortNotificationTransaction transaction, ProceedingJoinPoint jp) throws Exception {
         Object proceed = null;
         try {
-            proceed =doAroundTransactionContext(transaction, () -> {
+            proceed = doAroundTransactionContext(transaction, () -> {
                 try {
                     return jp.proceed();
                 } catch (Throwable throwable) {
@@ -141,18 +141,20 @@ public class BestEffortNotificationTransactionManager {
             transaction.setCheckTimes(transaction.getCheckTimes() + 1);
             nextDelaySpanSeconds = resource.getDelayCheckSpanSeconds();
         }
-        if (nextDelaySpanSeconds > 0) {
-            try {
-                transaction.setNextCheckTime(TimeUtil.getCurrentTime() + nextDelaySpanSeconds * 1000);
-                bestEffortNotificationDelayTaskJob.delayCheck(transaction, nextDelaySpanSeconds);
-            } catch (Exception exception) {
-                TccLogger.warn("add delay check task fail", exception);
-            }
-        } else {
+        if (nextDelaySpanSeconds < 0) {
             transaction.setStatus(BestEffortNotificationStatus.CANCEL);
             transaction.setRemark("delay time end");
+            bestEffortNotificationTransactionRepository.update(transaction);
+            return;
         }
-        bestEffortNotificationTransactionRepository.update(transaction);
+        try {
+            transaction.setNextCheckTime(TimeUtil.getCurrentTime() + nextDelaySpanSeconds * 1000);
+            bestEffortNotificationTransactionRepository.update(transaction);
+        } catch (Exception exception) {
+            TccLogger.warn("add delay check task fail", exception);
+        } finally {
+            bestEffortNotificationDelayTaskJob.delayCheck(transaction, nextDelaySpanSeconds);
+        }
     }
 
 

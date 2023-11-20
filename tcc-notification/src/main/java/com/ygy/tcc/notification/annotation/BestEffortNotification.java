@@ -16,8 +16,10 @@ public @interface BestEffortNotification {
 
     int maxCheckTimes() default 3;
 
-    String checkMethod()  default "checkMethod";
+    String checkMethod() default "checkMethod";
 
-    boolean checkRetryDoNotification() default false;
+    boolean customNotificationMethod() default false;
+
+    String notificationMethod() default "notificationMethod";
 
 }
