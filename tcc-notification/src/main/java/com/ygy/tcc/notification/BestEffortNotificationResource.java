@@ -21,7 +21,7 @@ public class BestEffortNotificationResource {
 
     private Object targetBean;
 
-    private long delayCheckSpanSeconds;
+    private long delayCheckSpanMillis;
 
     private int maxCheckTimes;
 

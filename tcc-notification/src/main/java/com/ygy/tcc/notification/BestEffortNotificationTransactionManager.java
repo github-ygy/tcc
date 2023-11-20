@@ -132,28 +132,28 @@ public class BestEffortNotificationTransactionManager {
 
     public void addDelayCheckTask(BestEffortNotificationTransaction transaction) {
         long now = TimeUtil.getCurrentTime();
-        long nextDelaySpanSeconds = -1;
+        long nextDelaySpanMillis = -1;
         if (transaction.getNextCheckTime() > now) {
             return;
         }
         BestEffortNotificationResource resource = BestEffortNotificationHolder.getResource(transaction.getResourceId());
         if (resource.getMaxCheckTimes() > transaction.getCheckTimes()) {
             transaction.setCheckTimes(transaction.getCheckTimes() + 1);
-            nextDelaySpanSeconds = resource.getDelayCheckSpanSeconds();
+            nextDelaySpanMillis = resource.getDelayCheckSpanMillis();
         }
-        if (nextDelaySpanSeconds < 0) {
+        if (nextDelaySpanMillis < 0) {
             transaction.setStatus(BestEffortNotificationStatus.CANCEL);
             transaction.setRemark("delay time end");
             bestEffortNotificationTransactionRepository.update(transaction);
             return;
         }
         try {
-            transaction.setNextCheckTime(TimeUtil.getCurrentTime() + nextDelaySpanSeconds * 1000);
+            transaction.setNextCheckTime(TimeUtil.getCurrentTime() + nextDelaySpanMillis);
             bestEffortNotificationTransactionRepository.update(transaction);
         } catch (Exception exception) {
             TccLogger.warn("add delay check task fail", exception);
         } finally {
-            bestEffortNotificationDelayTaskJob.delayCheck(transaction, nextDelaySpanSeconds);
+            bestEffortNotificationDelayTaskJob.delayCheck(transaction, nextDelaySpanMillis);
         }
     }
 

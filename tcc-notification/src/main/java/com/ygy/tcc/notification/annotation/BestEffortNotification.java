@@ -12,7 +12,7 @@ public @interface BestEffortNotification {
 
     boolean afterCommitSynchronization() default false;
 
-    long delayCheckSpanSeconds() default 10;
+    long delayCheckSpanMillis() default 3000;
 
     int maxCheckTimes() default 3;
 
